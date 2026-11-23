@@ -4,7 +4,7 @@ $roleBadge  = ['admin' => 'badge-role-admin', 'staff' => 'badge-role-staff', 'cu
 ?>
 <div class="page-head">
     <h1 class="card-title">User accounts</h1>
-    <p class="muted">Staff and admin logins, and customer accounts.</p>
+    <p class="muted">Staff and admin logins, and customer accounts. Use <strong>Edit</strong> to change anyone's role.</p>
 </div>
 
 <div class="stack">

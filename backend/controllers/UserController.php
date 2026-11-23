@@ -106,16 +106,13 @@ class UserController
             if (!$errors && $this->emailTaken($email, $id)) {
                 $errors[] = 'Another account already uses this email.';
             }
-            // Customers stay customers; staff and admins can switch between the two.
-            if ($user['role'] === 'customer') {
-                $role = 'customer';
-            } elseif (!in_array($role, ['staff', 'admin'], true)) {
-                $errors[] = 'Choose Staff or Admin.';
+            if (!in_array($role, ['customer', 'staff', 'admin'], true)) {
+                $errors[] = 'Choose Customer, Staff or Admin.';
             }
-            if ($role !== $user['role'] && $user['role'] === 'admin') {
-                if ($id === (int) $me['id']) {
-                    $errors[] = 'You can\'t remove your own admin role. Ask another admin to do it.';
-                } elseif ($this->activeAdminCount() <= 1 && (int) $user['is_active']) {
+            if ($role !== $user['role'] && $id === (int) $me['id']) {
+                $errors[] = 'You can\'t change your own role. Ask another admin to do it.';
+            } elseif ($role !== $user['role'] && $user['role'] === 'admin') {
+                if ($this->activeAdminCount() <= 1 && (int) $user['is_active']) {
                     $errors[] = 'This is the last active admin. Make someone else an admin first.';
                 }
             }
@@ -128,10 +125,23 @@ class UserController
                 redirect('admin/users/edit', ['id' => $id]);
             }
 
-            db()->prepare('UPDATE users SET name = :name, email = :email, role = :role WHERE id = :id')
-                ->execute(['name' => $name, 'email' => $email, 'role' => $role, 'id' => $id]);
+            $pdo = db();
+            $pdo->beginTransaction();
+            try {
+                $pdo->prepare('UPDATE users SET name = :name, email = :email, role = :role WHERE id = :id')
+                    ->execute(['name' => $name, 'email' => $email, 'role' => $role, 'id' => $id]);
+                if ($role === 'customer') {
+                    $this->ensureCustomerProfile($id, $name, $email);
+                }
+                $pdo->commit();
+            } catch (Throwable $e) {
+                $pdo->rollBack();
+                throw $e;
+            }
 
-            flash('success', 'Account for ' . $name . ' saved.');
+            $roleNames = ['customer' => 'Customer', 'staff' => 'Staff', 'admin' => 'Admin'];
+            flash('success', 'Account for ' . $name . ' saved'
+                . ($role !== $user['role'] ? ' and changed from ' . $roleNames[$user['role']] . ' to ' . $roleNames[$role] . '.' : '.'));
             redirect('admin/users');
         }
 
@@ -229,6 +239,31 @@ class UserController
         $stmt = db()->prepare('SELECT id, name, email, role, is_active, created_at FROM users WHERE id = :id');
         $stmt->execute(['id' => $id]);
         return $stmt->fetch() ?: null;
+    }
+
+    /**
+     * Customers need a customer profile to book. If the account has none, link a walk-in
+     * record with the same email (keeping its history), or create a new profile.
+     */
+    private function ensureCustomerProfile(int $userId, string $name, string $email): void
+    {
+        $pdo = db();
+        $has = $pdo->prepare('SELECT 1 FROM customers WHERE user_id = :uid');
+        $has->execute(['uid' => $userId]);
+        if ($has->fetchColumn()) {
+            return;
+        }
+
+        $link = $pdo->prepare('SELECT id FROM customers WHERE email = :email AND user_id IS NULL ORDER BY id LIMIT 1');
+        $link->execute(['email' => $email]);
+        $walkInId = $link->fetchColumn();
+
+        if ($walkInId) {
+            $pdo->prepare('UPDATE customers SET user_id = :uid WHERE id = :id')->execute(['uid' => $userId, 'id' => $walkInId]);
+        } else {
+            $pdo->prepare('INSERT INTO customers (user_id, full_name, email) VALUES (:uid, :name, :email)')
+                ->execute(['uid' => $userId, 'name' => $name, 'email' => $email]);
+        }
     }
 
     private function emailTaken(string $email, int $exceptId = 0): bool
