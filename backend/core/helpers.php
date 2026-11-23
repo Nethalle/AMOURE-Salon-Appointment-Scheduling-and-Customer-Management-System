@@ -60,6 +60,18 @@ function peso(mixed $amount): string
     return '₱' . number_format((float) $amount, 2);
 }
 
+/** '14:30:00' or '14:30' => '2:30 PM' */
+function fmt_time(string $time): string
+{
+    return date('g:i A', strtotime($time));
+}
+
+/** '2026-11-24' => 'Tue, Nov 24, 2026' */
+function fmt_date(string $date): string
+{
+    return date('D, M j, Y', strtotime($date));
+}
+
 function clear_old(): void
 {
     unset($_SESSION['old']);

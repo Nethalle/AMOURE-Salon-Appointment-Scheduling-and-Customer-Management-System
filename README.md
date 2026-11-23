@@ -568,6 +568,10 @@ In **Admin › Settings** the administrator can change:
 | `booking_emails_enabled` | `1` | Turn confirmation and cancellation emails on or off |
 | `reminders_enabled` | `1` | Turn email reminders on or off |
 | `reminder_hours_before` | `24` | How many hours before the appointment the reminder is sent |
+| `opening_time` | `09:00` | First bookable time of the day |
+| `closing_time` | `19:00` | Every appointment must end by this time |
+| `slot_interval_minutes` | `30` | Gap between the start times customers can pick |
+| `booking_days_ahead` | `30` | How many days ahead customers can book |
 
 ---
 
@@ -579,9 +583,9 @@ Seed accounts (change the passwords after the first login):
 
 | Role | Email | Password |
 | --- | --- | --- |
-| Administrator | `admin@amoure.test` | `[SET IN seed.sql]` |
-| Staff | `staff@amoure.test` | `[SET IN seed.sql]` |
-| Customer | `customer@amoure.test` | `[SET IN seed.sql]` |
+| Administrator | `admin@amoure.test` | `Admin@123` |
+| Staff | `staff@amoure.test` | `Staff@123` |
+| Customer | `customer@amoure.test` | `Customer@123` |
 
 ### Running the email reminder job
 
