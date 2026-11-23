@@ -48,6 +48,18 @@ function old(string $key): string
     return e($_SESSION['old'][$key] ?? '');
 }
 
+/** A remembered form value if there is one, otherwise the given default (for edit forms). */
+function old_or(string $key, mixed $default): string
+{
+    return e($_SESSION['old'][$key] ?? $default);
+}
+
+/** Format a price in pesos: 1500 => ₱1,500.00 */
+function peso(mixed $amount): string
+{
+    return '₱' . number_format((float) $amount, 2);
+}
+
 function clear_old(): void
 {
     unset($_SESSION['old']);

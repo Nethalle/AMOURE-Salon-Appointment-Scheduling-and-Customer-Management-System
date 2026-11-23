@@ -20,6 +20,12 @@ $routes = [
     'register'                 => ['AuthController', 'register'],
     'logout'                   => ['AuthController', 'logout'],
     'admin/dashboard'          => ['DashboardController', 'admin'],
+    'admin/services'           => ['ServiceController', 'index'],
+    'admin/services/edit'      => ['ServiceController', 'edit'],
+    'admin/services/toggle'    => ['ServiceController', 'toggle'],
+    'admin/stylists'           => ['StylistController', 'index'],
+    'admin/stylists/edit'      => ['StylistController', 'edit'],
+    'admin/stylists/toggle'    => ['StylistController', 'toggle'],
     'staff/dashboard'          => ['DashboardController', 'staff'],
     'customer/my-appointments' => ['AppointmentController', 'mine'],
 ];
