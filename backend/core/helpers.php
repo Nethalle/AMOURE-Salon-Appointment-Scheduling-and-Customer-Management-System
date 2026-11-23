@@ -77,6 +77,20 @@ function clear_old(): void
     unset($_SESSION['old']);
 }
 
+/** Render frontend/views/emails/<name>.php inside the email layout and return the HTML. */
+function render_email(string $name, array $data = []): string
+{
+    extract($data, EXTR_SKIP);
+
+    ob_start();
+    require __DIR__ . '/../../frontend/views/emails/' . $name . '.php';
+    $content = ob_get_clean();
+
+    ob_start();
+    require __DIR__ . '/../../frontend/views/emails/_layout.php';
+    return (string) ob_get_clean();
+}
+
 /** Render frontend/views/<name>.php inside the main layout. */
 function view(string $name, array $data = []): void
 {

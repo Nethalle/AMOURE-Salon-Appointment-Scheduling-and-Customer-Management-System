@@ -5,6 +5,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../services/BookingRules.php';
+require_once __DIR__ . '/../services/NotificationService.php';
 
 class AppointmentController
 {
@@ -162,7 +163,7 @@ class AppointmentController
         }
 
         db()->prepare("UPDATE appointments SET status = 'cancelled' WHERE id = :id")->execute(['id' => $id]);
-        // Cancellation email is sent here once the Email Notifications module is added.
+        NotificationService::appointmentChanged($id, 'cancellation');
 
         flash('success', 'Your appointment on ' . fmt_date($appt['appt_date']) . ' at ' . fmt_time($appt['start_time']) . ' was cancelled.');
         redirect('customer/my-appointments');

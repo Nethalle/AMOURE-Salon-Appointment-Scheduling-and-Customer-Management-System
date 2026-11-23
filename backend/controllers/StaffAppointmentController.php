@@ -4,6 +4,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../services/BookingRules.php';
+require_once __DIR__ . '/../services/NotificationService.php';
 
 class StaffAppointmentController
 {
@@ -120,7 +121,12 @@ class StaffAppointmentController
         [, $newStatus] = self::ACTIONS[$action];
         db()->prepare('UPDATE appointments SET status = :status WHERE id = :id')
             ->execute(['status' => $newStatus, 'id' => $id]);
-        // Confirmation / cancellation emails are sent here once the Email Notifications module is added.
+
+        if ($newStatus === 'confirmed') {
+            $this->emailNote(NotificationService::appointmentChanged($id, 'confirmation'));
+        } elseif ($newStatus === 'cancelled') {
+            $this->emailNote(NotificationService::appointmentChanged($id, 'cancellation'));
+        }
 
         $labels = [
             'confirmed' => 'confirmed',
@@ -213,7 +219,11 @@ class StaffAppointmentController
                 }
                 throw $e;
             }
-            // A new confirmation email (with the new time) is sent here once Email Notifications is added.
+
+            // Confirmed bookings get a new confirmation with the new time.
+            if ($appt['status'] === 'confirmed') {
+                $this->emailNote(NotificationService::appointmentChanged($id, 'confirmation', true));
+            }
 
             flash('success', "{$appt['customer']}'s appointment moved to " . fmt_date($b['date']) . ' at ' . fmt_time($b['time']) . '.');
             redirect('staff/appointments', ['from' => $b['date']]);
@@ -235,6 +245,14 @@ class StaffAppointmentController
     }
 
     // ---------- helpers ----------
+
+    /** Tell staff when the customer email could not be sent (the booking itself is still saved). */
+    private function emailNote(string $result): void
+    {
+        if ($result === 'failed') {
+            flash('error', 'The change was saved, but the email to the customer could not be sent. The admin can see the reason in Settings › Email log.');
+        }
+    }
 
     private function allowedActions(string $status, bool $started): array
     {
@@ -415,6 +433,7 @@ class StaffAppointmentController
                 'source'     => $source,
                 'created_by' => $user['id'],
             ]);
+            $appointmentId = (int) $pdo->lastInsertId();
             $pdo->commit();
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -422,7 +441,8 @@ class StaffAppointmentController
             }
             throw $e;
         }
-        // Confirmation email (if the customer has an email) is sent here once Email Notifications is added.
+
+        $this->emailNote(NotificationService::appointmentChanged($appointmentId, 'confirmation'));
 
         flash('success', 'Appointment booked for ' . fmt_date($b['date']) . ' at ' . fmt_time($b['time']) . '.');
         redirect('staff/appointments', ['from' => $b['date']]);
