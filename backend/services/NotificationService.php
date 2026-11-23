@@ -1,0 +1,2 @@
+<?php
+// Confirmation + cancellation emails

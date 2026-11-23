@@ -1,0 +1,1 @@
+-- AMOURE SALON schema: tables, keys and indexes

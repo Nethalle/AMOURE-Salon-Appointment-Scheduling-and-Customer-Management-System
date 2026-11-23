@@ -1,0 +1,7 @@
+/vendor/
+/backend/config/database.php
+/backend/config/mail.php
+/backend/logs/*
+!/backend/logs/.gitkeep
+.DS_Store
+Thumbs.db

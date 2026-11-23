@@ -1,0 +1,2 @@
+<?php
+// Reminder email template
