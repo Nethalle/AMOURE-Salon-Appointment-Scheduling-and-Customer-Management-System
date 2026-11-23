@@ -1,10 +1,16 @@
 <?php
-/**
- * @var int $step
- * Step 1: $services   Step 2: $service, $stylists
- * Step 3: $service, $stylist, $days, $date, $slots
- * Step 4: $service, $stylist, $date, $time, $endTime
- */
+// Variables come from AppointmentController::book() through view().
+// Step 1 uses $services; step 2 $service, $stylists; step 3 adds $stylist, $days, $date, $slots; step 4 adds $time, $endTime.
+/** @var int $step */
+/** @var array $services */
+/** @var array $service */
+/** @var array $stylists */
+/** @var array $stylist */
+/** @var array $days */
+/** @var string $date */
+/** @var array $slots */
+/** @var string $time */
+/** @var string $endTime */
 $steps = [1 => 'Service', 2 => 'Stylist', 3 => 'Date & time', 4 => 'Confirm'];
 ?>
 <div class="page-head center">

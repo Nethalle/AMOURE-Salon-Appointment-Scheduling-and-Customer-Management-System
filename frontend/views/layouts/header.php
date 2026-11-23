@@ -14,6 +14,7 @@ if ($user && $user['role'] === 'admin') {
         'admin/services'     => 'Services',
         'admin/stylists'     => 'Stylists',
         'admin/reviews'      => 'Reviews',
+        'admin/reports'      => 'Reports',
         'admin/settings'     => 'Settings',
     ];
 } elseif ($user && $user['role'] === 'staff') {

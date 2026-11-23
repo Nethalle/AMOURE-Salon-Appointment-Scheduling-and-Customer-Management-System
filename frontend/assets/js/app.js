@@ -9,6 +9,29 @@ document.addEventListener('submit', function (event) {
     }
 });
 
+// Reports: show the From/To dates only for "Custom range"; editing a date switches to custom.
+(function () {
+    var form = document.getElementById('report-filter');
+    if (!form) {
+        return;
+    }
+    var preset = form.querySelector('#preset');
+    var ranges = form.querySelectorAll('.custom-range');
+
+    function update() {
+        ranges.forEach(function (field) {
+            field.hidden = preset.value !== 'custom';
+        });
+    }
+    form.querySelectorAll('input[type="date"]').forEach(function (input) {
+        input.addEventListener('change', function () {
+            preset.value = 'custom';
+        });
+    });
+    preset.addEventListener('change', update);
+    update();
+})();
+
 // New appointment: only show stylists who perform the chosen service.
 // <select data-filters="stylist"> controls <select id="stylist"> whose options have data-services="1,3".
 document.querySelectorAll('select[data-filters]').forEach(function (serviceSelect) {
