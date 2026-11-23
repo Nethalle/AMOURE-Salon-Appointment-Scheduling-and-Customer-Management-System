@@ -1,2 +1,73 @@
 <?php
-// Escaping, redirects, flash messages
+// Escaping, URLs, redirects, flash messages, views.
+
+declare(strict_types=1);
+
+/** Escape any value for safe HTML output. */
+function e(mixed $value): string
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+}
+
+/** Build a link to a route: url('login') => index.php?page=login */
+function url(string $page, array $params = []): string
+{
+    return 'index.php?' . http_build_query(['page' => $page] + $params);
+}
+
+/** Send the browser to another route and stop. */
+function redirect(string $page, array $params = []): void
+{
+    header('Location: ' . url($page, $params));
+    exit;
+}
+
+/** Queue a one-time message: flash('success', 'Saved.') */
+function flash(string $type, string $message): void
+{
+    $_SESSION['flash'][] = ['type' => $type, 'message' => $message];
+}
+
+/** Read and clear queued messages. */
+function get_flashes(): array
+{
+    $messages = $_SESSION['flash'] ?? [];
+    unset($_SESSION['flash']);
+    return $messages;
+}
+
+/** Remember form values (never passwords) so a form can be refilled after an error. */
+function remember_old(array $values): void
+{
+    $_SESSION['old'] = $values;
+}
+
+/** Read a remembered form value, already escaped. */
+function old(string $key): string
+{
+    return e($_SESSION['old'][$key] ?? '');
+}
+
+function clear_old(): void
+{
+    unset($_SESSION['old']);
+}
+
+/** Render frontend/views/<name>.php inside the main layout. */
+function view(string $name, array $data = []): void
+{
+    $viewFile = __DIR__ . '/../../frontend/views/' . $name . '.php';
+    if (!is_file($viewFile)) {
+        throw new RuntimeException("View not found: {$name}");
+    }
+
+    extract($data, EXTR_SKIP);
+    $flashes = get_flashes();
+    $user    = current_user();
+
+    require __DIR__ . '/../../frontend/views/layouts/header.php';
+    require $viewFile;
+    require __DIR__ . '/../../frontend/views/layouts/footer.php';
+
+    clear_old();
+}
