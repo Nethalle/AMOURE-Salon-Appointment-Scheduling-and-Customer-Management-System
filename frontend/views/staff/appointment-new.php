@@ -1,5 +1,7 @@
 <?php /** @var array $pick  @var array $services  @var array $stylists  @var array $customers */
 $ready = $pick['service'] && $pick['stylist'] && !$pick['problem'] && !$pick['full'] && $pick['slots'];
+// Customer chosen earlier (from a customer's page, or kept after an error).
+$chosenCustomer = (int) ($_SESSION['old']['customer_id'] ?? $_GET['customer'] ?? 0);
 ?>
 <div class="page-head">
     <p><a href="<?= e(url('staff/appointments')) ?>">← Back to appointments</a></p>
@@ -12,6 +14,7 @@ $ready = $pick['service'] && $pick['stylist'] && !$pick['problem'] && !$pick['fu
         <h2 class="section-title">1. Service, stylist and date</h2>
         <form method="get" action="index.php" class="form form-grid">
             <input type="hidden" name="page" value="staff/appointments/new">
+            <?php if ($chosenCustomer): ?><input type="hidden" name="customer" value="<?= e($chosenCustomer) ?>"><?php endif; ?>
 
             <div class="field">
                 <label for="service">Service</label>
@@ -70,7 +73,7 @@ $ready = $pick['service'] && $pick['stylist'] && !$pick['problem'] && !$pick['fu
                         <select id="customer_id" name="customer_id">
                             <option value="0">— New customer —</option>
                             <?php foreach ($customers as $c): ?>
-                                <option value="<?= e($c['id']) ?>" <?= (int) ($_SESSION['old']['customer_id'] ?? 0) === (int) $c['id'] ? 'selected' : '' ?>>
+                                <option value="<?= e($c['id']) ?>" <?= $chosenCustomer === (int) $c['id'] ? 'selected' : '' ?>>
                                     <?= e($c['full_name']) ?><?= $c['phone'] ? ' · ' . e($c['phone']) : '' ?>
                                 </option>
                             <?php endforeach; ?>

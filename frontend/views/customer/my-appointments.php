@@ -65,6 +65,7 @@
                             <th scope="col">Service</th>
                             <th scope="col">Stylist</th>
                             <th scope="col">Status</th>
+                            <th scope="col">Review</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -75,6 +76,15 @@
                             <td><?= e($a['service']) ?></td>
                             <td><?= e($a['stylist']) ?></td>
                             <td><span class="badge badge-<?= e($a['status']) ?>"><?= e(ucfirst(str_replace('_', '-', $a['status']))) ?></span></td>
+                            <td>
+                                <?php if ($a['review_rating']): ?>
+                                    <span class="stars" aria-label="<?= e($a['review_rating']) ?> out of 5 stars"><?= e(stars((int) $a['review_rating'])) ?></span>
+                                <?php elseif ($a['status'] === 'completed'): ?>
+                                    <a href="<?= e(url('customer/review', ['id' => $a['id']])) ?>" class="btn btn-small btn-ghost">Leave a review</a>
+                                <?php else: ?>
+                                    <span class="muted">—</span>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>

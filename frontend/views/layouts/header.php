@@ -10,14 +10,17 @@ if ($user && $user['role'] === 'admin') {
     $sidebar = [
         'admin/dashboard'    => 'Dashboard',
         'staff/appointments' => 'Appointments',
+        'staff/customers'    => 'Customers',
         'admin/services'     => 'Services',
         'admin/stylists'     => 'Stylists',
+        'admin/reviews'      => 'Reviews',
         'admin/settings'     => 'Settings',
     ];
 } elseif ($user && $user['role'] === 'staff') {
     $sidebar = [
         'staff/dashboard'    => 'Dashboard',
         'staff/appointments' => 'Appointments',
+        'staff/customers'    => 'Customers',
     ];
 }
 

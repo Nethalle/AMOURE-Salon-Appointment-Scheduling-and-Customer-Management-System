@@ -31,12 +31,17 @@ $routes = [
     'admin/settings/send-reminders' => ['SettingsController', 'sendReminders'],
     'staff/dashboard'          => ['DashboardController', 'staff'],
     'staff/appointments'       => ['StaffAppointmentController', 'index'],
+    'staff/customers'          => ['CustomerController', 'index'],
+    'staff/customers/view'     => ['CustomerController', 'show'],
     'staff/appointments/status'     => ['StaffAppointmentController', 'status'],
     'staff/appointments/new'        => ['StaffAppointmentController', 'create'],
     'staff/appointments/reschedule' => ['StaffAppointmentController', 'reschedule'],
     'customer/my-appointments' => ['AppointmentController', 'mine'],
     'customer/book'            => ['AppointmentController', 'book'],
     'customer/cancel'          => ['AppointmentController', 'cancel'],
+    'customer/review'          => ['ReviewController', 'write'],
+    'admin/reviews'            => ['ReviewController', 'index'],
+    'admin/reviews/moderate'   => ['ReviewController', 'moderate'],
 ];
 
 $page = $_GET['page'] ?? 'home';

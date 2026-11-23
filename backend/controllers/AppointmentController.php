@@ -16,11 +16,13 @@ class AppointmentController
 
         $stmt = db()->prepare(
             'SELECT a.id, a.appt_date, a.start_time, a.end_time, a.status,
-                    s.name AS service, s.price, st.full_name AS stylist
+                    s.name AS service, s.price, st.full_name AS stylist,
+                    r.rating AS review_rating, r.status AS review_status
                FROM appointments a
                JOIN customers  c  ON c.id  = a.customer_id
                JOIN services   s  ON s.id  = a.service_id
                JOIN stylists   st ON st.id = a.stylist_id
+               LEFT JOIN reviews r ON r.appointment_id = a.id
               WHERE c.user_id = :uid
               ORDER BY a.appt_date DESC, a.start_time DESC'
         );

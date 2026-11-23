@@ -575,6 +575,85 @@ a.day:hover { border-color: var(--gold); color: var(--ink); }
 .filters .form-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .form-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
+.search-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.search-form input[type="search"] {
+    min-height: 38px;
+    min-width: 220px;
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+}
+.stat-money { font-size: 26px; }
+.form textarea { resize: vertical; }
+.badge-inline { margin-left: 6px; }
+
+/* ---------- reviews ---------- */
+.stars { color: var(--gold-text); letter-spacing: 2px; font-size: 16px; }
+
+.rating { border: 0; padding: 0; margin: 8px 0 4px; }
+.rating legend { font-weight: 600; font-size: 13px; padding: 0; }
+.rating-stars {
+    display: inline-flex;
+    flex-direction: row-reverse;   /* lets "hover a star = light up the stars before it" work in CSS */
+    gap: 4px;
+    margin-top: 6px;
+}
+.rating-stars input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.form .rating-stars label {
+    margin: 0;
+    font-size: 36px;
+    line-height: 1;
+    color: var(--line);
+    cursor: pointer;
+    padding: 2px;
+}
+.rating-stars input:checked ~ label,
+.rating-stars label:hover,
+.rating-stars label:hover ~ label { color: var(--gold); }
+.rating-stars input:focus-visible + label { outline: 2px solid var(--rose-btn); border-radius: 4px; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.tab {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    text-decoration: none;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 500;
+}
+.tab[aria-current="page"] { background: var(--rose-btn); border-color: var(--rose-btn); color: #fff; }
+
+.review-list { display: flex; flex-direction: column; gap: 14px; }
+.review-card { padding: 22px 26px; }
+.review-text { margin: 12px 0 6px; font-size: 15px; }
+.review-meta { margin: 0 0 12px; font-size: 13px; }
+
+.vouches { margin: 8px 0 24px; }
+.vouches-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+.vouches-head p { margin: 0; }
+.vouch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+.vouch {
+    margin: 0;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+}
+.vouch blockquote { margin: 10px 0; font-family: var(--serif); font-size: 19px; font-style: italic; line-height: 1.4; }
+.vouch figcaption { color: var(--muted); font-size: 13px; }
+
 /* Time slots as radio buttons */
 .slot-radio { position: relative; cursor: pointer; }
 .slot-radio input {

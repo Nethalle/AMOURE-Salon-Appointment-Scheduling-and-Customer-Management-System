@@ -60,7 +60,7 @@ class StaffAppointmentController
         }
 
         $sql = 'SELECT a.id, a.appt_date, a.start_time, a.end_time, a.status, a.source,
-                       c.full_name AS customer, c.phone, c.email,
+                       c.id AS customer_id, c.full_name AS customer, c.phone, c.email,
                        s.name AS service, st.full_name AS stylist
                   FROM appointments a
                   JOIN customers c  ON c.id  = a.customer_id
