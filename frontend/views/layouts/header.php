@@ -8,13 +8,15 @@ $currentPage = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'home';
 $sidebar = [];
 if ($user && $user['role'] === 'admin') {
     $sidebar = [
-        'admin/dashboard' => 'Dashboard',
-        'admin/services'  => 'Services',
-        'admin/stylists'  => 'Stylists',
+        'admin/dashboard'    => 'Dashboard',
+        'staff/appointments' => 'Appointments',
+        'admin/services'     => 'Services',
+        'admin/stylists'     => 'Stylists',
     ];
 } elseif ($user && $user['role'] === 'staff') {
     $sidebar = [
-        'staff/dashboard' => 'Dashboard',
+        'staff/dashboard'    => 'Dashboard',
+        'staff/appointments' => 'Appointments',
     ];
 }
 
