@@ -15,7 +15,11 @@ INSERT INTO settings (setting_key, setting_value) VALUES
   ('daily_appointment_limit', '20'),
   ('booking_emails_enabled',  '1'),
   ('reminders_enabled',       '1'),
-  ('reminder_hours_before',   '24');
+  ('reminder_hours_before',   '24'),
+  ('opening_time',            '09:00'),
+  ('closing_time',            '19:00'),
+  ('slot_interval_minutes',   '30'),
+  ('booking_days_ahead',      '30');
 
 -- ---------- users ----------
 INSERT INTO users (id, name, email, password_hash, role) VALUES

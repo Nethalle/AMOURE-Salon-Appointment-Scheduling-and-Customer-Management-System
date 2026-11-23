@@ -10,6 +10,7 @@ require __DIR__ . '/backend/core/helpers.php';
 require __DIR__ . '/backend/core/db.php';
 require __DIR__ . '/backend/core/csrf.php';
 require __DIR__ . '/backend/core/auth.php';
+require __DIR__ . '/backend/core/settings.php';
 
 start_session();
 
@@ -28,6 +29,8 @@ $routes = [
     'admin/stylists/toggle'    => ['StylistController', 'toggle'],
     'staff/dashboard'          => ['DashboardController', 'staff'],
     'customer/my-appointments' => ['AppointmentController', 'mine'],
+    'customer/book'            => ['AppointmentController', 'book'],
+    'customer/cancel'          => ['AppointmentController', 'cancel'],
 ];
 
 $page = $_GET['page'] ?? 'home';

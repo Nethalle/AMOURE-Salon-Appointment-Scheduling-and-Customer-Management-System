@@ -45,6 +45,7 @@ $isActive = static fn (string $route): bool =>
         <?php if ($user): ?>
             <?php if ($user['role'] === 'customer'): ?>
                 <a href="<?= e(url('customer/my-appointments')) ?>" <?= $isActive('customer/my-appointments') ? 'aria-current="page"' : '' ?>>My appointments</a>
+                <a href="<?= e(url('customer/book')) ?>" class="btn btn-primary btn-small">Book appointment</a>
             <?php endif; ?>
             <span class="nav-user">
                 <?= e($user['name']) ?>

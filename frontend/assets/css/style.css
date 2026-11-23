@@ -347,7 +347,6 @@ a:hover { color: var(--rose-btn-hover); }
     border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
-    text-transform: capitalize;
 }
 .badge-pending   { background: #FBEFD9; color: #6E4B00; }
 .badge-confirmed { background: #E3ECF6; color: #1F4A73; }
@@ -405,6 +404,141 @@ a:hover { color: var(--rose-btn-hover); }
     clip: rect(0 0 0 0);
     white-space: nowrap;
 }
+
+/* ---------- customer booking ---------- */
+.head-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+.centered-card { margin: 0 auto; }
+
+.steps {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 28px;
+    padding: 0;
+    margin: 0 0 28px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+}
+.steps li { display: flex; align-items: center; gap: 8px; }
+.step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--rose);
+    font-weight: 600;
+    font-size: 12px;
+    background: var(--paper);
+}
+.steps .done .step-num    { background: var(--blush-deep); border-color: var(--blush-deep); color: var(--ink); }
+.steps .current           { color: var(--ink); font-weight: 600; }
+.steps .current .step-num { background: var(--rose-btn); border-color: var(--rose-btn); color: #fff; }
+
+.summary-line { text-align: center; margin: 0 0 20px; }
+.summary-line a { margin-left: 8px; font-size: 13px; }
+
+.choice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+.choice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 28px 20px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    color: var(--ink);
+    text-align: center;
+    transition: border-color .15s, transform .15s;
+}
+.choice:hover { border-color: var(--gold); transform: translateY(-2px); color: var(--ink); }
+.choice-title { font-family: var(--serif); font-size: 24px; font-weight: 600; line-height: 1.2; }
+.choice-meta  { color: var(--muted); font-size: 13px; }
+.choice-price { color: var(--gold-text); font-weight: 600; margin-top: 6px; }
+.avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    margin-bottom: 8px;
+    background: var(--blush);
+    border: 1px solid var(--gold);
+    font-family: var(--serif);
+    font-size: 32px;
+    color: var(--gold-text);
+}
+
+.day-strip {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 6px 2px 12px;
+    margin-top: 10px;
+}
+.day {
+    flex: 0 0 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--paper);
+    text-decoration: none;
+    color: var(--ink);
+}
+a.day:hover { border-color: var(--gold); color: var(--ink); }
+.day-week, .day-month { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.day-num { font-family: var(--serif); font-size: 26px; font-weight: 600; line-height: 1.2; }
+.day-selected { background: var(--gold); border-color: var(--gold); }
+.day-selected .day-week, .day-selected .day-month { color: var(--ink); }
+.day-full { background: var(--bg); color: var(--muted); }
+
+.slots-title { margin-top: 20px; }
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+.slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border: 1px solid var(--gold);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--ink);
+    font-weight: 500;
+    font-size: 14px;
+}
+.slot:hover { background: var(--gold); color: var(--ink); }
+
+.summary { margin: 0 0 20px; }
+.summary div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+}
+.summary dt { color: var(--muted); }
+.summary dd { margin: 0; font-weight: 600; text-align: right; }
 
 /* ---------- small screens ---------- */
 @media (max-width: 760px) {
