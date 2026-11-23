@@ -1,0 +1,3 @@
+Options -Indexes
+RedirectMatch 403 /(backend|database|vendor|frontend/views)(/|$)
+RedirectMatch 403 /\.git

@@ -1,0 +1,2 @@
+<?php
+// Appointment controller

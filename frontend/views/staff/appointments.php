@@ -1,0 +1,2 @@
+<?php
+// Staff view: appointments

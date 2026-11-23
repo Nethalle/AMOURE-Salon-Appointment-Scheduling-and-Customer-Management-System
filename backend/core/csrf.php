@@ -1,0 +1,2 @@
+<?php
+// CSRF token helpers

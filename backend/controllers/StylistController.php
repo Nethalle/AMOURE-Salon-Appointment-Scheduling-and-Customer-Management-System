@@ -1,0 +1,2 @@
+<?php
+// Stylist controller
