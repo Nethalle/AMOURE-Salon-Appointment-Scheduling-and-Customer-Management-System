@@ -14,14 +14,14 @@ Back to [README](README.md)
 | **CSS3** | `frontend/assets/css/style.css`: salon branding, layout, responsive pages |
 | **JavaScript** | `frontend/assets/js/app.js`: form hints, filters, confirm dialogs |
 | **PHP (backend development)** | Controllers, services and core files in `backend/` |
-| **MySQL database design** | `database/schema.sql`: 8 related tables, keys, unique constraints and indexes |
+| **MySQL database design** | `database/schema.sql`: 9 related tables, keys, unique constraints and indexes |
 | **SQL queries** | Overlap check, daily-limit count, search filters, monthly reports |
 | **PDO and prepared statements** | `backend/core/db.php` and every query in the system |
 | **Frontend / backend separation** | `frontend/` displays data only; `backend/` holds all logic and SQL |
 | **Routing** | `index.php` sends every request to the right controller |
 | **Authentication** | Login, logout, registration with `password_hash()` and sessions |
 | **Role-based access control** | Admin, staff and customer each see only their allowed pages and records |
-| **Email integration** | Appointment reminders sent through PHPMailer and SMTP |
+| **Email integration** | Booking confirmation, cancellation and reminder emails sent through PHPMailer and SMTP, with every send logged |
 | **Scheduled tasks** | `backend/jobs/send_reminders.php` run hourly by Task Scheduler or cron |
 | **Dependency management** | Composer installs PHPMailer |
 | **Web security** | Protection against SQL injection, XSS and CSRF; blocked access to backend files |
@@ -48,6 +48,7 @@ Back to [README](README.md)
 | --- | --- |
 | Two customers booked with the same stylist at the same time | Overlap check before saving a booking |
 | Salon accepts more bookings than it can handle | Daily appointment limit |
+| Customers unsure whether their booking was confirmed or cancelled | Confirmation and cancellation emails |
 | Customers forget their appointments | Email reminders |
 | Cancelled bookings not updated | Appointment status tracking that frees cancelled slots |
 | Customer details and history hard to find | Customer profiles with appointment history, search and filtering |
@@ -65,4 +66,4 @@ Back to [README](README.md)
 | Design a suitable Web Management System | Appointment scheduling and customer management system |
 | Identify users and functions | Administrator, staff and customer roles with defined permissions |
 | Apply HTML5, CSS, PHP, MySQL and other web technologies | Full stack listed above, plus JavaScript, PHPMailer and Composer |
-| Demonstrate problem-solving, creativity and logical thinking | Business rules, booking checks and automated reminders |
+| Demonstrate problem-solving, creativity and logical thinking | Business rules, booking checks, and automatic confirmation, cancellation and reminder emails |
