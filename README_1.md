@@ -1,6 +1,6 @@
 # AMOURÉ SALON: Salon Appointment Scheduling and Customer Management System
 
-A web-based management system that lets AMOURÉ SALON record and monitor all appointments and customer records in one place, replacing notebooks and scattered chat messages, and reminds customers of their appointments by email.
+A web-based management system that lets AMOURÉ SALON record and monitor all appointments and customer records in one place, replacing notebooks and scattered chat messages, and keeps customers informed by email: booking confirmations, cancellations and appointment reminders.
 
 **Course:** Web Management System, BSCS-3C **Author:** Fedoc, Cyrene Nathalie B. **Submitted to:** Prof. Wendy Anas
 
@@ -44,6 +44,7 @@ A web-based management system that lets AMOURÉ SALON record and monitor all app
 | Services and Stylists Management | Planned |
 | Appointment Scheduling | Planned |
 | Appointment Status Monitoring | Planned |
+| Email Notifications (confirmation, cancellation) | Planned |
 | Email Reminders | Planned |
 | Customer Reviews | Planned |
 | Search and Filtering | Planned |
@@ -74,7 +75,7 @@ A web-based system that keeps every appointment and customer record in one datab
 - customers request appointments online; the receptionist records walk-in and phone bookings;
 - before saving, the system checks that the stylist is free for that time slot and that the salon's **daily appointment limit** has not been reached;
 - each appointment carries a status: `pending`, `confirmed`, `completed`, `cancelled` or `no_show`;
-- customers with confirmed appointments receive an **email reminder** before their appointment, to reduce no-shows;
+- customers receive **emails** when their booking is confirmed or cancelled, and a **reminder** before the appointment, to reduce confusion and no-shows;
 - after a completed service, the customer can leave a rating and review, shown as a customer vouch once the administrator approves it;
 - a dashboard and reports summarize daily and monthly activity.
 
@@ -90,10 +91,11 @@ A web-based system that keeps every appointment and customer record in one datab
 | Services and Stylists Management | Maintains services with price and duration, and the stylists who perform them. |
 | Appointment Scheduling | Customers request bookings; staff create, edit, reschedule and cancel them, with overlap and daily-limit checks. |
 | Appointment Status Monitoring | Tracks each booking's status so cancelled bookings free up their time slot. |
+| Email Notifications | Emails the customer right away when a booking is confirmed (including the new time after a reschedule) or cancelled. |
 | Email Reminders | Automatically emails customers a reminder before their confirmed appointment (default: 24 hours before). |
 | Customer Reviews | Customers rate and review completed services; approved reviews are shown as vouches. |
 | Search and Filtering | Finds customers and appointments by name, date, stylist, service or status. |
-| Reports | Appointments per day or month, completed / cancelled / no-show counts, popular services, average ratings and reminders sent. |
+| Reports | Appointments per day or month, completed / cancelled / no-show counts, popular services, average ratings and emails sent. |
 
 ---
 
@@ -101,15 +103,17 @@ A web-based system that keeps every appointment and customer record in one datab
 
 | Role | Can do |
 | --- | --- |
-| **Administrator / Owner** | Manage user accounts, services, prices, stylists, the daily appointment limit and reminder settings; view all appointments and customer records; send pending reminders manually; approve or remove reviews; generate reports. |
+| **Administrator / Owner** | Manage user accounts, services, prices, stylists, the daily appointment limit and email settings; view all appointments and customer records; send pending reminders manually; approve or remove reviews; generate reports. |
 | **Receptionist / Staff** | Register and update customers; create, reschedule and cancel appointments; confirm online booking requests; update appointment statuses; view the daily schedule. |
-| **Customer** | Create an account; view services and stylists; request an appointment; receive email reminders; view own appointments and history; cancel or request to reschedule; rate and review a completed service. Customers see **only their own records**. |
+| **Customer** | Create an account; view services and stylists; request an appointment; receive confirmation, cancellation and reminder emails; view own appointments and history; cancel or request to reschedule; rate and review a completed service. Customers see **only their own records**. |
 
 ---
 
 ## 5. Architecture
 
 The system is split into a **frontend** (what the user sees), a **backend** (logic and rules) and a **database**. Every browser request goes through one entry point, `index.php`, which routes it to a backend controller. The controller checks the user's role, applies the business rules, reads or writes MySQL, then passes the data to a frontend view that is returned as HTML.
+
+When a booking is confirmed or cancelled, the controller also asks the **notification service** to email the customer right away.
 
 A separate **reminder job** runs on a schedule, finds upcoming confirmed appointments and emails the customers.
 
@@ -127,13 +131,13 @@ flowchart TB
         Router["Entry point + router<br/>index.php"]
         Guard["Auth + role guard<br/>backend/core/auth.php"]
         Controllers["Controllers<br/>backend/controllers/*.php"]
-        Services["Services<br/>booking rules · reports · mailer"]
+        Services["Services<br/>booking rules · notifications<br/>reminders · reports · mailer"]
         DBConn["PDO connection<br/>backend/core/db.php"]
         Job["Reminder job<br/>backend/jobs/send_reminders.php"]
     end
 
     subgraph DATA["DATABASE"]
-        MySQL[("MySQL<br/>users · customers · stylists<br/>services · appointments<br/>reviews · settings")]
+        MySQL[("MySQL<br/>users · customers · stylists<br/>services · appointments<br/>reviews · email_logs · settings")]
     end
 
     Scheduler["Task Scheduler / cron<br/>runs every hour"]
@@ -145,7 +149,7 @@ flowchart TB
     Router --> Guard
     Guard -- "allowed" --> Controllers
     Guard -- "denied: redirect to login" --> Browser
-    Controllers --> Services
+    Controllers -- "book · confirm · cancel" --> Services
     Controllers --> DBConn
     Services --> DBConn
     DBConn -- "prepared statements" --> MySQL
@@ -163,12 +167,12 @@ flowchart TB
 
 | Layer | Folder | Responsibility |
 | --- | --- | --- |
-| Frontend | `frontend/views/` | Page templates: layout, forms, tables, dashboards, email template. Display only; no SQL. |
+| Frontend | `frontend/views/` | Page templates (layout, forms, tables, dashboards) and email templates (confirmation, cancellation, reminder). Display only; no SQL. |
 | Frontend | `frontend/assets/` | Stylesheets, client-side scripts (form hints, filters, confirm dialogs) and images such as the logo. |
 | Backend | `index.php` | Single entry point; reads `?page=` and calls the matching controller. |
 | Backend | `backend/core/` | Database connection, sessions and role guard, CSRF tokens, helpers. |
 | Backend | `backend/controllers/` | One controller per module; handles GET/POST, validates input, loads data, chooses a view. |
-| Backend | `backend/services/` | Shared rules: overlap and daily-limit checks, report queries, sending email. |
+| Backend | `backend/services/` | Shared rules: overlap and daily-limit checks, report queries, confirmation / cancellation / reminder emails. |
 | Backend | `backend/jobs/` | Scripts run by the scheduler, not by the browser (email reminders). |
 | Database | `database/` | Schema and sample data. |
 
@@ -182,6 +186,7 @@ sequenceDiagram
     participant AC as AppointmentController
     participant BR as BookingRules
     participant D as MySQL
+    participant N as NotificationService
 
     C->>V: Fill in service, stylist, date, time
     V->>R: POST ?page=appointments/book
@@ -201,10 +206,46 @@ sequenceDiagram
             AC-->>V: "Stylist is not available at that time"
         else Slot free
             AC->>D: INSERT appointment (pending or confirmed)
+            opt Booked by staff as confirmed
+                AC->>N: Send confirmation email
+            end
             AC-->>V: Redirect with "Booking saved"
         end
     end
 ```
+
+### Notification flow: confirmation and cancellation emails
+
+```mermaid
+sequenceDiagram
+    actor U as Staff / Customer
+    participant AC as AppointmentController
+    participant D as MySQL
+    participant N as NotificationService
+    participant M as Mailer (PHPMailer)
+    participant E as SMTP server
+    actor C as Customer
+
+    U->>AC: Confirm, reschedule or cancel appointment
+    AC->>D: UPDATE appointment (status, date or time)
+    D-->>AC: Saved
+    AC->>N: Appointment changed
+    alt Booking emails on and customer has an email
+        N->>M: Build email from confirmation or cancellation template
+        M->>E: Send
+        alt Sent
+            E-->>C: Confirmation or cancellation email
+            N->>D: INSERT email_logs (sent)
+        else Failed
+            N->>D: INSERT email_logs (failed, with error)
+        end
+    else No email address or emails turned off
+        N->>N: Skip sending
+    end
+    AC-->>U: "Appointment confirmed" or "Appointment cancelled"
+```
+
+The change to the appointment is saved **before** the email is sent, so a failed email never undoes a confirmation or cancellation.
 
 ### Reminder flow: email before the appointment
 
@@ -225,9 +266,10 @@ sequenceDiagram
         M->>E: Send
         alt Sent
             E-->>C: Reminder email
-            J->>D: SET reminder_sent_at = NOW()
+            J->>D: SET reminder_sent_at = NOW() and INSERT email_logs (sent)
         else Failed
-            J->>J: Log error; leave reminder_sent_at empty to retry next run
+            J->>D: INSERT email_logs (failed, with error)
+            Note over J,D: reminder_sent_at stays empty, so the next run retries
         end
     end
 ```
@@ -237,11 +279,11 @@ sequenceDiagram
 ```mermaid
 stateDiagram-v2
     [*] --> pending: Customer requests online
-    [*] --> confirmed: Staff books walk-in / phone
-    pending --> confirmed: Staff confirms
-    pending --> cancelled: Customer or staff cancels
-    confirmed --> confirmed: Email reminder sent
-    confirmed --> cancelled: Customer or staff cancels
+    [*] --> confirmed: Staff books walk-in / phone (confirmation email)
+    pending --> confirmed: Staff confirms (confirmation email)
+    pending --> cancelled: Customer or staff cancels (cancellation email)
+    confirmed --> confirmed: Rescheduled (new confirmation email) or reminder sent
+    confirmed --> cancelled: Customer or staff cancels (cancellation email)
     confirmed --> completed: Service done
     confirmed --> no_show: Customer did not arrive
     completed --> [*]: Customer may leave a review
@@ -297,7 +339,9 @@ amoure-salon/
 │       ├── staff/                 # dashboard, customers, appointments, schedule
 │       ├── customer/              # book, my-appointments, review
 │       └── emails/
-│           └── reminder.php       # reminder email template
+│           ├── confirmation.php   # booking confirmed / rescheduled
+│           ├── cancellation.php   # booking cancelled
+│           └── reminder.php       # reminder before the appointment
 │
 ├── backend/                       # ── BACKEND ──  (.htaccess: deny direct access)
 │   ├── config/
@@ -322,6 +366,7 @@ amoure-salon/
 │   │   └── SettingsController.php
 │   ├── services/
 │   │   ├── BookingRules.php       # overlap + daily-limit checks
+│   │   ├── NotificationService.php # confirmation + cancellation emails
 │   │   ├── ReminderService.php    # finds due appointments, sends reminders
 │   │   ├── Mailer.php             # PHPMailer wrapper
 │   │   └── ReportService.php
@@ -361,6 +406,7 @@ erDiagram
     SERVICES ||--o{ APPOINTMENTS : "is booked as"
     USERS ||--o{ APPOINTMENTS : "created by"
     APPOINTMENTS ||--o| REVIEWS : receives
+    APPOINTMENTS ||--o{ EMAIL_LOGS : triggers
     STYLISTS }o--o{ SERVICES : "can perform"
 
     USERS {
@@ -417,6 +463,15 @@ erDiagram
         enum status "pending, approved, removed"
         datetime created_at
     }
+    EMAIL_LOGS {
+        int id PK
+        int appointment_id FK
+        enum type "confirmation, cancellation, reminder"
+        varchar recipient
+        enum status "sent, failed"
+        text error_message
+        datetime created_at
+    }
     SETTINGS {
         varchar setting_key PK
         varchar setting_value
@@ -431,7 +486,8 @@ A `stylist_services` junction table links stylists to the services they can perf
 - `reviews.appointment_id` is unique: one review per appointment.
 - `appointments (stylist_id, appt_date, start_time)` is indexed for the overlap check.
 - `appointments (appt_date, status)` is indexed for the daily limit, dashboard, reports and reminder job.
-- `settings` holds `daily_appointment_limit`, `reminders_enabled` and `reminder_hours_before`.
+- `email_logs (appointment_id, type)` is indexed so staff can see which emails an appointment received.
+- `settings` holds `daily_appointment_limit`, `booking_emails_enabled`, `reminders_enabled` and `reminder_hours_before`.
 
 ---
 
@@ -509,6 +565,7 @@ In **Admin › Settings** the administrator can change:
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | `daily_appointment_limit` | `[SET BY ADMIN]` | Maximum appointments accepted per day |
+| `booking_emails_enabled` | `1` | Turn confirmation and cancellation emails on or off |
 | `reminders_enabled` | `1` | Turn email reminders on or off |
 | `reminder_hours_before` | `24` | How many hours before the appointment the reminder is sent |
 
@@ -559,6 +616,7 @@ Pages are opened through `index.php?page=<route>`.
 | Services and Stylists | `admin/services`, `admin/stylists` | `ServiceController`, `StylistController` | Admin |
 | Appointment Scheduling | `customer/book`, `staff/appointments` | `AppointmentController` | All |
 | Status Monitoring | `staff/appointments`, `staff/schedule` | `AppointmentController` | Admin, Staff |
+| Email Notifications | sent automatically from `staff/appointments` and `customer/my-appointments` | `AppointmentController`, `NotificationService` | Automatic |
 | Email Reminders | `admin/settings` (manual send); `backend/jobs/send_reminders.php` | `SettingsController`, `ReminderService` | Admin, scheduler |
 | Customer Reviews | `customer/review`, `admin/reviews` | `ReviewController` | Customer, Admin |
 | Search and Filtering | filter bar on customer and appointment lists | `CustomerController`, `AppointmentController` | Admin, Staff |
@@ -576,17 +634,22 @@ Pages are opened through `index.php?page=<route>`.
 3. **Cancelled and no-show bookings free their slot.** They are ignored by both checks above.
 4. **Online requests start as `pending`.** Staff must confirm them. Walk-in and phone bookings entered by staff start as `confirmed`.
 5. **Status changes follow the lifecycle** in [Architecture](#5-architecture); `completed`, `cancelled` and `no_show` are final.
-6. **Email reminders** are sent only when all of these are true:
+6. **Confirmation and cancellation emails.** When `booking_emails_enabled` is on and the customer has an email address:
+   - a **confirmation email** is sent when an appointment becomes `confirmed` (staff confirms an online request, or staff books a walk-in or phone customer) and again with the new date and time when a confirmed appointment is rescheduled;
+   - a **cancellation email** is sent when an appointment becomes `cancelled`, whether the customer or staff cancelled it.
+   The appointment change is saved first; a failed email is logged in `email_logs` and never undoes the change.
+7. **Email reminders** are sent only when all of these are true:
    - `reminders_enabled` is on;
    - the appointment is `confirmed`;
    - it starts within the next `reminder_hours_before` hours and has not started yet;
    - `reminder_sent_at` is empty;
    - the customer has an email address.
    Each appointment gets **at most one** reminder. A failed send leaves `reminder_sent_at` empty so the next run retries it.
-7. **Rescheduling clears the reminder.** When an appointment's date or time changes, `reminder_sent_at` is reset so the customer is reminded of the new time.
-8. **Reviews** are allowed only for the customer's own `completed` appointment, once per appointment, with a rating from 1 to 5. New reviews are `pending` and appear publicly only after an administrator approves them.
-9. **Bookings in the past** are refused.
-10. **Inactive services or stylists** cannot be booked.
+8. **Rescheduling clears the reminder.** When an appointment's date or time changes, `reminder_sent_at` is reset so the customer is reminded of the new time.
+9. **Every email is logged.** Each confirmation, cancellation and reminder is recorded in `email_logs` as `sent` or `failed`.
+10. **Reviews** are allowed only for the customer's own `completed` appointment, once per appointment, with a rating from 1 to 5. New reviews are `pending` and appear publicly only after an administrator approves them.
+11. **Bookings in the past** are refused.
+12. **Inactive services or stylists** cannot be booked.
 
 ---
 
@@ -633,24 +696,33 @@ Manual test cases to run before each submission:
 | 6 | Cancel a booking, then book the same slot again | Saved |
 | 7 | Book when the date has reached the daily limit | Refused with "fully booked" message |
 | 8 | Book a date in the past | Refused |
-| 9 | Confirm an appointment for tomorrow, then run `send_reminders.php` | Customer receives one reminder; `reminder_sent_at` is filled |
-| 10 | Run `send_reminders.php` again | No second email |
-| 11 | Pending, cancelled, or no-email appointment within the window | No email sent |
-| 12 | Reschedule an appointment that already got a reminder | `reminder_sent_at` cleared; new reminder sent for the new time |
-| 13 | Wrong SMTP password in `mail.php`, run the job | Error written to `backend/logs/`; `reminder_sent_at` stays empty |
-| 14 | Review a `confirmed` (not completed) appointment | Not allowed |
-| 15 | Review the same completed appointment twice | Second review refused |
-| 16 | Submit a review | Hidden until admin approves |
-| 17 | Customer A changes the ID in the URL to view Customer B's appointment | Access denied |
-| 18 | Enter `<script>alert(1)</script>` as a customer name | Shown as plain text on pages and in the email |
-| 19 | Reports for a month | Counts match the appointments list filtered by that month |
+| 9 | Staff confirms a customer's online request | Customer receives a confirmation email; `email_logs` row with `sent` |
+| 10 | Staff books a walk-in customer who has an email | Confirmation email sent |
+| 11 | Staff books a walk-in customer with no email | Booking saved; no email, no error |
+| 12 | Reschedule a confirmed appointment | New confirmation email shows the new date and time |
+| 13 | Customer cancels their own appointment | Cancellation email sent; slot is free again |
+| 14 | Staff cancels an appointment | Cancellation email sent to the customer |
+| 15 | Turn off `booking_emails_enabled`, then confirm a booking | Booking confirmed; no email sent |
+| 16 | Wrong SMTP password in `mail.php`, then cancel a booking | Booking still cancelled; `email_logs` row with `failed` and the error |
+| 17 | Confirm an appointment for tomorrow, then run `send_reminders.php` | Customer receives one reminder; `reminder_sent_at` is filled |
+| 18 | Run `send_reminders.php` again | No second reminder |
+| 19 | Pending, cancelled, or no-email appointment within the window | No reminder sent |
+| 20 | Reschedule an appointment that already got a reminder | `reminder_sent_at` cleared; new reminder sent for the new time |
+| 21 | Wrong SMTP password in `mail.php`, run the job | `email_logs` row with `failed`; `reminder_sent_at` stays empty |
+| 22 | Review a `confirmed` (not completed) appointment | Not allowed |
+| 23 | Review the same completed appointment twice | Second review refused |
+| 24 | Submit a review | Hidden until admin approves |
+| 25 | Customer A changes the ID in the URL to view Customer B's appointment | Access denied |
+| 26 | Enter `<script>alert(1)</script>` as a customer name | Shown as plain text on pages and in emails |
+| 27 | Reports for a month | Counts match the appointments list filtered by that month |
 
 ---
 
 ## 18. Known limitations
 
 - No online payment.
-- No SMS reminders; only customers with an email address receive reminders.
+- No SMS; only customers with an email address receive confirmations, cancellations and reminders.
+- Confirmation and cancellation emails are sent while the page loads, so confirming or cancelling can take a few seconds longer; a failed email is not resent automatically.
 - Reminders depend on the scheduled job running; if the computer running XAMPP is off, reminders are sent on the next run (if still before the appointment).
 - Gmail limits how many emails a free account can send per day; enough for a small salon, not for bulk sending.
 - Stylist working hours and days off are not modeled; staff must avoid booking outside them.
@@ -668,6 +740,7 @@ Manual test cases to run before each submission:
 | `Class "PHPMailer\PHPMailer\PHPMailer" not found` | Composer packages not installed | Run `composer install` in the project folder. |
 | `SMTP Error: Could not authenticate` | Normal Gmail password used, or 2-Step Verification off | Turn on 2-Step Verification and use a Gmail App Password in `mail.php`. |
 | `SMTP connect() failed` / SSL error | `openssl` extension off, or port blocked | Enable `extension=openssl` in `php.ini`, restart Apache; try port 587 with `tls`. |
+| Booking confirmed or cancelled but no email | Customer has no email, booking emails off, or send failed | Check the customer's email, **Admin › Settings**, and the `email_logs` table for the error; check the spam folder. |
 | No reminders arrive, no errors | Job not scheduled, reminders off, or appointment not `confirmed` | Run the job by hand; check **Admin › Settings** and the appointment status; check the spam folder. |
 | Reminder sent at the wrong time | PHP and MySQL time zones differ | Set `date.timezone = Asia/Manila` in `php.ini` and run `SET time_zone = '+08:00'` on connect. |
 | Blank white page | PHP error hidden | Turn on `display_errors` during development; check `xampp/apache/logs/error.log`. |
@@ -685,19 +758,22 @@ Manual test cases to run before each submission:
 - **PDO over mysqli.** Prepared statements with named parameters and exception-based error handling.
 - **Booking rules in one service** (`BookingRules.php`). Customer and staff booking use the same checks, so the overlap and daily-limit logic cannot drift apart.
 - **`end_time` stored, not only computed.** Keeps the overlap query a simple indexed comparison and keeps old bookings correct if a service's duration changes later.
-- **Email instead of SMS for reminders.** Free to send with an existing email account and easy to set up with PHPMailer; SMS needs a paid gateway.
+- **Email instead of SMS.** Free to send with an existing email account and easy to set up with PHPMailer; SMS needs a paid gateway.
+- **Confirmation and cancellation emails sent right away; reminders sent by a job.** Customers expect a confirmation the moment staff confirms, but a reminder must go out at a set time even when nobody is using the system.
+- **Save first, then email.** The appointment change is committed before sending, so an email problem can never leave a booking half-confirmed or half-cancelled.
+- **`email_logs` table.** One place to see every email sent or failed, useful for checking complaints ("I never got an email") and for reports.
 - **Scheduled job instead of sending on page load.** Reminders go out on time even when nobody is using the system, and pages stay fast.
 - **`reminder_sent_at` column.** Guarantees one reminder per appointment and lets failed sends retry automatically.
 - **Walk-in customers without accounts.** `customers.user_id` is nullable, so staff can record walk-in and phone customers who never register.
-- **Settings table.** The administrator can change the daily limit and reminder timing without editing code.
+- **Settings table.** The administrator can change the daily limit, turn emails on or off and set reminder timing without editing code.
 - **Reviews moderated before display.** Prevents inappropriate or fake vouches from appearing publicly.
 
 ---
 
 ## 21. Future work
 
-- SMS reminders through an SMS gateway
-- Booking confirmation and cancellation emails
+- SMS notifications through an SMS gateway
+- Resend failed emails from the admin page
 - Online payments and deposits
 - Stylist working hours, breaks and days off
 - Multi-service appointments
