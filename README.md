@@ -34,23 +34,23 @@ A web-based management system that lets AMOURÉ SALON record and monitor all app
 
 ## 1. Project status
 
-**In development (rebuilt from scratch).** The repository was restarted to follow the approved project proposal. Progress per module:
+**All proposal modules are built.** The repository was restarted to follow the approved project proposal. Progress per module:
 
 | Module | Status |
 | --- | --- |
-| Login and Logout | Planned |
-| Dashboard | Planned |
-| Customer Management | Planned |
-| Services and Stylists Management | Planned |
-| Appointment Scheduling | Planned |
-| Appointment Status Monitoring | Planned |
-| Email Notifications (confirmation, cancellation) | Planned |
-| Email Reminders | Planned |
-| Customer Reviews | Planned |
-| Search and Filtering | Planned |
-| Reports | Planned |
+| Login and Logout | Done |
+| Dashboard | Done |
+| Customer Management | Done |
+| Services and Stylists Management | Done |
+| Appointment Scheduling | Done |
+| Appointment Status Monitoring | Done |
+| Email Notifications (confirmation, cancellation) | Done (needs a Gmail App Password in `mail.php` to send) |
+| Email Reminders | Done (needs the scheduled job set up) |
+| Customer Reviews | Done |
+| Search and Filtering | Done |
+| Reports | Done |
+| User Accounts and Change Password | Done |
 
-Update each row to *In progress* or *Done* as work is completed.
 
 ---
 

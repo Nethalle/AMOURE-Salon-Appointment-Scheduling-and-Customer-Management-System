@@ -15,6 +15,7 @@ if ($user && $user['role'] === 'admin') {
         'admin/stylists'     => 'Stylists',
         'admin/reviews'      => 'Reviews',
         'admin/reports'      => 'Reports',
+        'admin/users'        => 'User accounts',
         'admin/settings'     => 'Settings',
     ];
 } elseif ($user && $user['role'] === 'staff') {
@@ -54,10 +55,10 @@ $isActive = static fn (string $route): bool =>
                 <a href="<?= e(url('customer/my-appointments')) ?>" <?= $isActive('customer/my-appointments') ? 'aria-current="page"' : '' ?>>My appointments</a>
                 <a href="<?= e(url('customer/book')) ?>" class="btn btn-primary btn-small">Book appointment</a>
             <?php endif; ?>
-            <span class="nav-user">
+            <a href="<?= e(url('account/password')) ?>" class="nav-user" title="Change password" <?= $isActive('account/password') ? 'aria-current="page"' : '' ?>>
                 <?= e($user['name']) ?>
                 <?php if ($isApp): ?><span class="role-tag"><?= e($user['role']) ?></span><?php endif; ?>
-            </span>
+            </a>
             <form method="post" action="<?= e(url('logout')) ?>" class="inline-form">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn btn-ghost btn-small">Log out</button>

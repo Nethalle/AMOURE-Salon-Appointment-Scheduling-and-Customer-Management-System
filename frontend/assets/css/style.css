@@ -655,6 +655,17 @@ a.day:hover { border-color: var(--gold); color: var(--ink); }
 .vouch blockquote { margin: 10px 0; font-family: var(--serif); font-size: 19px; font-style: italic; line-height: 1.4; }
 .vouch figcaption { color: var(--muted); font-size: 13px; }
 
+/* ---------- accounts ---------- */
+.narrow-stack { max-width: 560px; }
+a.nav-user { text-decoration: none; }
+.site-nav a.nav-user:not(.btn) { color: var(--muted); font-weight: 400; }
+.site-nav a.nav-user:hover { color: var(--rose-text); }
+.form input:disabled, .form select:disabled { background: var(--bg); color: var(--muted); }
+
+.badge-role-admin    { background: var(--rose-btn); color: #fff; }
+.badge-role-staff    { background: var(--blush-deep); color: var(--ink); }
+.badge-role-customer { background: var(--bg); color: var(--ink); border: 1px solid var(--line); }
+
 /* ---------- reports ---------- */
 .report-stats { margin-top: 20px; }
 .chart-sub { margin: 0 0 18px; font-size: 13px; }

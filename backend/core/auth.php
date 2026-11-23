@@ -50,7 +50,11 @@ function home_for_role(string $role): string
     };
 }
 
-/** Stop here unless someone is logged in. Returns the user. */
+/**
+ * Stop here unless someone is logged in. Returns the user.
+ * Re-reads the account on every protected page, so a deactivation or role change
+ * by the admin takes effect immediately, even for someone already logged in.
+ */
 function require_login(): array
 {
     $user = current_user();
@@ -58,7 +62,21 @@ function require_login(): array
         flash('error', 'Please log in first.');
         redirect('login');
     }
-    return $user;
+
+    $stmt = db()->prepare('SELECT name, role, is_active FROM users WHERE id = :id');
+    $stmt->execute(['id' => $user['id']]);
+    $fresh = $stmt->fetch();
+
+    if (!$fresh || !(int) $fresh['is_active']) {
+        logout_user();
+        start_session();
+        flash('error', 'Your account is no longer active. Please contact the salon.');
+        redirect('login');
+    }
+
+    $_SESSION['user']['name'] = $fresh['name'];
+    $_SESSION['user']['role'] = $fresh['role'];
+    return $_SESSION['user'];
 }
 
 /** Stop here unless the logged-in user has one of the given roles. */
