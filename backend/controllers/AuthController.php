@@ -40,7 +40,7 @@ class AuthController
             redirect(home_for_role($user['role']));
         }
 
-        view('public/login', ['title' => 'Log in']);
+        view('public/login', ['title' => 'Log in', 'layout' => 'auth']);
     }
 
     public function register(): void
@@ -135,7 +135,7 @@ class AuthController
             redirect(home_for_role('customer'));
         }
 
-        view('public/register', ['title' => 'Create an account']);
+        view('public/register', ['title' => 'Create an account', 'layout' => 'auth']);
     }
 
     public function logout(): void

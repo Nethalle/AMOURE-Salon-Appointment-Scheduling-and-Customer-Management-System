@@ -65,6 +65,37 @@ $typeLabels = ['confirmation' => 'Confirmation', 'cancellation' => 'Cancellation
             </div>
         </section>
 
+        <section class="card">
+            <h2 class="section-title">Salon info (shown on the website)</h2>
+            <p class="muted" style="margin:0">Leave a box empty to hide it.</p>
+            <div class="form form-grid">
+                <div class="field">
+                    <label for="salon_phone">Phone</label>
+                    <input type="tel" id="salon_phone" name="salon_phone" value="<?= $val('salon_phone') ?>" maxlength="25">
+                </div>
+                <div class="field">
+                    <label for="salon_email">Email</label>
+                    <input type="email" id="salon_email" name="salon_email" value="<?= $val('salon_email') ?>" maxlength="150">
+                </div>
+                <div class="field">
+                    <label for="salon_address">Address</label>
+                    <input type="text" id="salon_address" name="salon_address" value="<?= $val('salon_address') ?>" maxlength="200">
+                </div>
+                <div class="field">
+                    <label for="instagram_url">Instagram link</label>
+                    <input type="url" id="instagram_url" name="instagram_url" value="<?= $val('instagram_url') ?>" placeholder="https://instagram.com/…">
+                </div>
+                <div class="field">
+                    <label for="facebook_url">Facebook link</label>
+                    <input type="url" id="facebook_url" name="facebook_url" value="<?= $val('facebook_url') ?>" placeholder="https://facebook.com/…">
+                </div>
+                <div class="field">
+                    <label for="tiktok_url">TikTok link</label>
+                    <input type="url" id="tiktok_url" name="tiktok_url" value="<?= $val('tiktok_url') ?>" placeholder="https://tiktok.com/@…">
+                </div>
+            </div>
+        </section>
+
         <div>
             <button type="submit" class="btn btn-primary">Save settings</button>
         </div>
