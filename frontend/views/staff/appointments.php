@@ -86,7 +86,7 @@ $sourceLabels = ['online' => 'Online', 'walk_in' => 'Walk-in', 'phone' => 'Phone
                                 <span class="muted"><?= e(fmt_time($a['start_time'])) ?> – <?= e(fmt_time($a['end_time'])) ?></span>
                             </td>
                             <td>
-                                <?= e($a['customer']) ?>
+                                <a href="<?= e(url('staff/customers/view', ['id' => $a['customer_id']])) ?>"><?= e($a['customer']) ?></a>
                                 <?php if ($a['phone']): ?><br><span class="muted"><?= e($a['phone']) ?></span><?php endif; ?>
                             </td>
                             <td><?= e($a['service']) ?></td>

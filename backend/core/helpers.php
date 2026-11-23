@@ -72,6 +72,23 @@ function fmt_date(string $date): string
     return date('D, M j, Y', strtotime($date));
 }
 
+/** 'Jessica Ramos Cruz' => 'Jessica C.' */
+function short_name(string $fullName): string
+{
+    $parts = preg_split('/\s+/', trim($fullName)) ?: [];
+    if (count($parts) < 2) {
+        return $parts[0] ?? '';
+    }
+    return $parts[0] . ' ' . mb_strtoupper(mb_substr(end($parts), 0, 1)) . '.';
+}
+
+/** 4 => '★★★★☆' */
+function stars(int $rating): string
+{
+    $rating = max(0, min(5, $rating));
+    return str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
+}
+
 function clear_old(): void
 {
     unset($_SESSION['old']);
