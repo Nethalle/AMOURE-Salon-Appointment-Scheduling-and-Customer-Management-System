@@ -21,18 +21,19 @@ $currentRole = $_SESSION['old']['role'] ?? $account['role'];
             <input type="email" id="email" name="email" value="<?= old_or('email', $account['email']) ?>" required maxlength="150">
 
             <label for="role">Role</label>
-            <?php if ($account['role'] === 'customer'): ?>
-                <input type="text" id="role" value="Customer" disabled>
-                <small class="hint">Customer accounts stay customers. To give someone staff access, create a separate staff account.</small>
+            <select id="role" name="role" <?= $isMe ? 'disabled' : '' ?> data-original="<?= e($account['role']) ?>">
+                <option value="customer" <?= $currentRole === 'customer' ? 'selected' : '' ?>>Customer (books appointments)</option>
+                <option value="staff" <?= $currentRole === 'staff' ? 'selected' : '' ?>>Staff (receptionist)</option>
+                <option value="admin" <?= $currentRole === 'admin' ? 'selected' : '' ?>>Admin (owner)</option>
+            </select>
+            <?php if ($isMe): ?>
+                <input type="hidden" name="role" value="<?= e($account['role']) ?>">
+                <small class="hint">You can't change your own role.</small>
             <?php else: ?>
-                <select id="role" name="role" <?= $isMe ? 'disabled' : '' ?>>
-                    <option value="staff" <?= $currentRole === 'staff' ? 'selected' : '' ?>>Staff (receptionist)</option>
-                    <option value="admin" <?= $currentRole === 'admin' ? 'selected' : '' ?>>Admin (owner)</option>
-                </select>
-                <?php if ($isMe): ?>
-                    <input type="hidden" name="role" value="<?= e($account['role']) ?>">
-                    <small class="hint">You can't change your own role.</small>
-                <?php endif; ?>
+                <small class="hint">
+                    The change applies on their next click. Changing to Customer gives them a customer profile for booking;
+                    their appointment history is kept if they switch roles.
+                </small>
             <?php endif; ?>
 
             <div class="form-actions">
