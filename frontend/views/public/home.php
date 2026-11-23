@@ -1,47 +1,187 @@
-<section class="hero">
+<?php
+/** @var array $services */ /** @var array $stylists */ /** @var array $reviews */
+/** @var int $reviewCount */ /** @var ?float $avgRating */ /** @var array $stats */ /** @var ?array $user */
+$bookUrl = url($user && $user['role'] === 'customer' ? 'customer/book' : 'register');
+$gallery = [
+    ['gallery-1.jpg', 'Hair styling'],
+    ['gallery-2.jpg', 'Facial treatment'],
+    ['gallery-3.jpg', 'Nail art'],
+    ['gallery-4.jpg', 'Makeup look'],
+    ['gallery-5.jpg', 'Bridal hair'],
+    ['gallery-6.jpg', 'Spa corner'],
+];
+?>
+
+<!-- ============ HERO ============ -->
+<section class="hero-split">
     <div class="hero-copy">
-        <p class="eyebrow">Premium salon experience</p>
-        <h1 class="display">Look and feel<br><em>your most beautiful</em></h1>
-        <p class="lead">Book your next appointment online. Choose your service, stylist and time, and we'll email you a confirmation and a reminder.</p>
+        <p class="eyebrow eyebrow-rose">Beauty &nbsp;•&nbsp; Self care &nbsp;•&nbsp; Confidence</p>
+        <h1 class="display">Look Good<br><span class="display-rose">Feel Amazing</span></h1>
+        <p class="script hero-script">Every Day</p>
+        <p class="lead">Professional beauty services designed to bring out your natural beauty. Choose your service, stylist and time online, and we'll take care of the rest.</p>
         <div class="hero-actions">
-            <?php if ($user && $user['role'] === 'customer'): ?>
-                <a href="<?= e(url('customer/book')) ?>" class="btn btn-primary">Book appointment</a>
-                <a href="<?= e(url('customer/my-appointments')) ?>" class="btn btn-ghost">My appointments</a>
-            <?php else: ?>
-                <a href="<?= e(url('register')) ?>" class="btn btn-primary">Book appointment</a>
-                <a href="<?= e(url('login')) ?>" class="btn btn-ghost">Log in</a>
-            <?php endif; ?>
+            <a href="<?= e($bookUrl) ?>" class="btn btn-primary"><?= icon('calendar', 'icon icon-sm') ?> Book appointment</a>
+            <a href="#services" class="btn btn-ghost">Explore services</a>
         </div>
+        <ul class="hero-features">
+            <li><?= icon('leaf') ?><span>Expert<br>stylists</span></li>
+            <li><?= icon('gem') ?><span>Premium<br>products</span></li>
+            <li><?= icon('flower') ?><span>Relaxing<br>atmosphere</span></li>
+            <li><?= icon('heart') ?><span>Personalized<br>care</span></li>
+        </ul>
+    </div>
+    <div class="hero-media">
+        <?= photo('hero.jpg', 'Hero photo of a client', 'hero-photo') ?>
+        <p class="badge-circle script" aria-hidden="true">Beauty<br>starts<br>with you</p>
     </div>
 </section>
 
-<?php if ($reviews): ?>
-<section class="vouches" aria-labelledby="vouches-title">
-    <div class="vouches-head">
-        <h2 id="vouches-title" class="cta-title">Our happy clients</h2>
-        <p class="muted">
-            <span class="stars" aria-hidden="true"><?= e(stars((int) round($avgRating))) ?></span>
-            <?= e(number_format($avgRating, 1)) ?> average from <?= e($reviewCount) ?> review<?= $reviewCount === 1 ? '' : 's' ?>
-        </p>
+<!-- ============ SERVICES ============ -->
+<section class="home-section" id="services" aria-labelledby="services-title">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow eyebrow-rose">Our services</p>
+            <h2 id="services-title" class="section-heading">Beauty Services for a Better You</h2>
+        </div>
+        <p class="muted section-intro">From hair to skin and nails, every service is done by our trained stylists.</p>
     </div>
-    <div class="vouch-grid">
-        <?php foreach ($reviews as $r): ?>
-            <figure class="vouch">
-                <span class="stars" aria-label="<?= e($r['rating']) ?> out of 5 stars"><?= e(stars((int) $r['rating'])) ?></span>
-                <?php if ($r['comment'] !== null): ?>
-                    <blockquote>“<?= e($r['comment']) ?>”</blockquote>
-                <?php endif; ?>
-                <figcaption>— <?= e($r['name']) ?> · <?= e($r['service']) ?></figcaption>
+
+    <?php if (!$services): ?>
+        <p class="muted">Services will appear here once the salon adds them.</p>
+    <?php else: ?>
+        <div class="service-grid">
+            <?php foreach ($services as $s): ?>
+                <article class="service-card">
+                    <?= photo('services/' . slugify($s['name']) . '.jpg', $s['name'], 'service-photo') ?>
+                    <div class="service-body">
+                        <span class="service-icon"><?= icon(service_icon($s['name'])) ?></span>
+                        <h3><?= e($s['name']) ?></h3>
+                        <p class="muted"><?= e($s['duration_minutes']) ?> min · <?= e(peso($s['price'])) ?></p>
+                        <a href="<?= e($user && $user['role'] === 'customer' ? url('customer/book', ['service' => $s['id']]) : url('register')) ?>" class="link-arrow">Book now <?= icon('arrow', 'icon icon-xs') ?></a>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section class="about-band" id="about" aria-labelledby="about-title">
+    <div class="about-media">
+        <?= photo('salon-interior.jpg', 'Photo of the salon interior', 'about-photo') ?>
+    </div>
+    <div class="about-copy">
+        <p class="eyebrow eyebrow-rose">About us</p>
+        <h2 id="about-title" class="section-heading">More Than a Beauty Salon</h2>
+        <p>At AMOURÉ SALON, beauty is a form of self-care. Our team gives every client high-quality service in a warm, relaxing and friendly space, and our online booking means no more waiting or double-booked stylists.</p>
+        <ul class="about-points">
+            <li><?= icon('gem') ?> Experienced stylists</li>
+            <li><?= icon('leaf') ?> Quality products</li>
+            <li><?= icon('heart') ?> A relaxing space</li>
+        </ul>
+        <a href="<?= e($bookUrl) ?>" class="btn btn-primary">Book your visit <?= icon('arrow', 'icon icon-sm') ?></a>
+    </div>
+    <ul class="about-stats">
+        <li><?= icon('sparkle') ?><strong><?= e($stats['services']) ?></strong><span>Beauty services</span></li>
+        <li><?= icon('users') ?><strong><?= e($stats['stylists']) ?></strong><span>Expert stylists</span></li>
+        <li><?= icon('heart') ?><strong><?= e($stats['completed']) ?></strong><span>Appointments completed</span></li>
+        <li><?= icon('star') ?><strong><?= $stats['rating'] !== null ? e(number_format($stats['rating'], 1)) : '—' ?></strong><span>Average rating</span></li>
+    </ul>
+</section>
+
+<!-- ============ OFFER / CTA ============ -->
+<section class="offer-band" aria-labelledby="offer-title">
+    <div class="offer-media"><?= photo('offer.jpg', 'Photo for the booking banner', 'offer-photo') ?></div>
+    <div class="offer-copy">
+        <p class="eyebrow eyebrow-rose">Book online</p>
+        <h2 id="offer-title" class="section-heading">Your Next Visit Is a Few Clicks Away</h2>
+        <p>Pick your service, stylist and time. We'll email you a confirmation and a reminder before your appointment.</p>
+        <a href="<?= e($bookUrl) ?>" class="btn btn-primary">Book now <?= icon('arrow', 'icon icon-sm') ?></a>
+    </div>
+    <p class="badge-circle badge-circle-light script" aria-hidden="true">Pamper<br>yourself<br>today</p>
+</section>
+
+<!-- ============ GALLERY ============ -->
+<section class="home-section" id="gallery" aria-labelledby="gallery-title">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow eyebrow-rose">Our gallery</p>
+            <h2 id="gallery-title" class="section-heading">Real Beauty, Real Results</h2>
+        </div>
+    </div>
+    <div class="gallery-grid">
+        <?php foreach ($gallery as [$file, $alt]): ?>
+            <?= photo($file, $alt, 'gallery-photo') ?>
+        <?php endforeach; ?>
+    </div>
+</section>
+
+<!-- ============ STYLISTS ============ -->
+<?php if ($stylists): ?>
+<section class="home-section" aria-labelledby="team-title">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow eyebrow-rose">Our team</p>
+            <h2 id="team-title" class="section-heading">Meet Our Stylists</h2>
+        </div>
+    </div>
+    <div class="team-grid">
+        <?php foreach ($stylists as $st): ?>
+            <figure class="team-card">
+                <?= photo('stylists/' . slugify($st['full_name']) . '.jpg', $st['full_name'], 'team-photo') ?>
+                <figcaption>
+                    <strong><?= e($st['full_name']) ?></strong>
+                    <span class="muted"><?= e($st['specialty'] ?? 'Stylist') ?></span>
+                </figcaption>
             </figure>
         <?php endforeach; ?>
     </div>
 </section>
 <?php endif; ?>
 
+<!-- ============ REVIEWS ============ -->
+<section class="home-section" id="reviews" aria-labelledby="reviews-title">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow eyebrow-rose">Client love</p>
+            <h2 id="reviews-title" class="section-heading">What Our Clients Say</h2>
+        </div>
+        <?php if ($reviewCount): ?>
+            <p class="muted section-intro">
+                <span class="stars" aria-hidden="true"><?= e(stars((int) round($avgRating))) ?></span>
+                <?= e(number_format($avgRating, 1)) ?> average from <?= e($reviewCount) ?> review<?= $reviewCount === 1 ? '' : 's' ?>
+            </p>
+        <?php endif; ?>
+    </div>
+
+    <?php if (!$reviews): ?>
+        <p class="muted">Reviews from our clients will appear here.</p>
+    <?php else: ?>
+        <div class="vouch-grid">
+            <?php foreach ($reviews as $r): ?>
+                <figure class="vouch">
+                    <div class="vouch-head">
+                        <span class="avatar avatar-sm" aria-hidden="true"><?= e(mb_strtoupper(mb_substr($r['name'], 0, 1))) ?></span>
+                        <div>
+                            <strong><?= e($r['name']) ?></strong>
+                            <span class="stars" aria-label="<?= e($r['rating']) ?> out of 5 stars"><?= e(stars((int) $r['rating'])) ?></span>
+                        </div>
+                    </div>
+                    <?php if ($r['comment'] !== null): ?>
+                        <blockquote>“<?= e($r['comment']) ?>”</blockquote>
+                    <?php endif; ?>
+                    <figcaption class="muted">Verified client · <?= e($r['service']) ?></figcaption>
+                </figure>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</section>
+
+<!-- ============ CTA ============ -->
 <section class="cta-band">
     <div>
-        <h2 class="cta-title">Ready to look &amp; feel your best?</h2>
-        <p>Create an account and book in a few minutes.</p>
+        <h2 class="cta-title">Ready to Look &amp; Feel Your Best?</h2>
+        <p>Book your appointment today and let our stylists pamper you.</p>
     </div>
-    <a href="<?= e(url($user && $user['role'] === 'customer' ? 'customer/book' : 'register')) ?>" class="btn btn-gold">Book your appointment</a>
+    <a href="<?= e($bookUrl) ?>" class="btn btn-gold"><?= icon('calendar', 'icon icon-sm') ?> Book your appointment</a>
 </section>

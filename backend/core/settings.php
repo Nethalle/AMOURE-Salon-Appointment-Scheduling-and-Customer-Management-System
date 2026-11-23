@@ -12,6 +12,13 @@ const SETTING_DEFAULTS = [
     'closing_time'            => '19:00',
     'slot_interval_minutes'   => '30',
     'booking_days_ahead'      => '30',
+    // Salon info shown on the website (empty = hidden)
+    'salon_phone'             => '',
+    'salon_email'             => '',
+    'salon_address'           => '',
+    'instagram_url'           => '',
+    'facebook_url'            => '',
+    'tiktok_url'              => '',
 ];
 
 function setting(string $key): string
@@ -20,8 +27,12 @@ function setting(string $key): string
 
     if ($cache === null) {
         $cache = [];
-        foreach (db()->query('SELECT setting_key, setting_value FROM settings')->fetchAll() as $row) {
-            $cache[$row['setting_key']] = $row['setting_value'];
+        try {
+            foreach (db()->query('SELECT setting_key, setting_value FROM settings')->fetchAll() as $row) {
+                $cache[$row['setting_key']] = $row['setting_value'];
+            }
+        } catch (Throwable $e) {
+            // Database not reachable (e.g. while showing the error page): fall back to defaults.
         }
     }
 

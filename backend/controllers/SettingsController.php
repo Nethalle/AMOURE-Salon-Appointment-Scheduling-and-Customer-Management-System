@@ -68,6 +68,12 @@ class SettingsController
             'booking_emails_enabled'  => isset($in['booking_emails_enabled']) ? '1' : '0',
             'reminders_enabled'       => isset($in['reminders_enabled']) ? '1' : '0',
             'reminder_hours_before'   => trim((string) ($in['reminder_hours_before'] ?? '')),
+            'salon_phone'             => trim((string) ($in['salon_phone'] ?? '')),
+            'salon_email'             => strtolower(trim((string) ($in['salon_email'] ?? ''))),
+            'salon_address'           => trim((string) ($in['salon_address'] ?? '')),
+            'instagram_url'           => trim((string) ($in['instagram_url'] ?? '')),
+            'facebook_url'            => trim((string) ($in['facebook_url'] ?? '')),
+            'tiktok_url'              => trim((string) ($in['tiktok_url'] ?? '')),
         ];
 
         $errors = [];
@@ -88,6 +94,21 @@ class SettingsController
         }
         if (!ctype_digit($v['reminder_hours_before']) || (int) $v['reminder_hours_before'] < 1 || (int) $v['reminder_hours_before'] > 72) {
             $errors[] = 'Send reminders between 1 and 72 hours before.';
+        }
+
+        if ($v['salon_phone'] !== '' && !preg_match('/^[0-9+\-\s()]{7,25}$/', $v['salon_phone'])) {
+            $errors[] = 'Enter a valid salon phone number, or leave it empty.';
+        }
+        if ($v['salon_email'] !== '' && !filter_var($v['salon_email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Enter a valid salon email, or leave it empty.';
+        }
+        if (mb_strlen($v['salon_address']) > 200) {
+            $errors[] = 'The address can be up to 200 characters.';
+        }
+        foreach (['instagram_url' => 'Instagram', 'facebook_url' => 'Facebook', 'tiktok_url' => 'TikTok'] as $key => $label) {
+            if ($v[$key] !== '' && (!filter_var($v[$key], FILTER_VALIDATE_URL) || !str_starts_with($v[$key], 'https://') || strlen($v[$key]) > 250)) {
+                $errors[] = "The $label link must be a full address starting with https://, or empty.";
+            }
         }
 
         if ($errors) {
