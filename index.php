@@ -48,6 +48,7 @@ $routes = [
     'customer/review'          => ['ReviewController', 'write'],
     'admin/reviews'            => ['ReviewController', 'index'],
     'admin/reviews/moderate'   => ['ReviewController', 'moderate'],
+    'notifications/read'       => ['NotificationController', 'read'],
 ];
 
 $page = $_GET['page'] ?? 'home';

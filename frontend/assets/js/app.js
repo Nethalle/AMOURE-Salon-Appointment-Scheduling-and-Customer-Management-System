@@ -124,3 +124,37 @@ document.addEventListener('click', function (event) {
         document.body.classList.remove('side-open');
     }
 });
+
+// Notifications: opening the bell marks everything as read (badge disappears; items stay highlighted until next page).
+document.querySelectorAll('details[data-notif]').forEach(function (bell) {
+    var sent = false;
+    bell.addEventListener('toggle', function () {
+        if (!bell.open || sent) {
+            return;
+        }
+        // Close other open menus.
+        document.querySelectorAll('details.dots[open], details.app-user[open]').forEach(function (d) { d.removeAttribute('open'); });
+        var badge = bell.querySelector('.app-bell-count');
+        if (!badge) {
+            return;
+        }
+        sent = true;
+        var body = new FormData();
+        body.append('csrf_token', bell.getAttribute('data-csrf'));
+        fetch(bell.getAttribute('data-read-url'), { method: 'POST', body: body, headers: { 'X-Requested-With': 'fetch' }, credentials: 'same-origin' })
+            .then(function (res) {
+                if (res.ok) {
+                    badge.remove();
+                }
+            })
+            .catch(function () { sent = false; });
+    });
+});
+// Click outside closes the bell too.
+document.addEventListener('click', function (event) {
+    document.querySelectorAll('details[data-notif][open]').forEach(function (d) {
+        if (!d.contains(event.target)) {
+            d.removeAttribute('open');
+        }
+    });
+});
