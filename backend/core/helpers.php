@@ -97,7 +97,7 @@ function photo(string $file, string $alt, string $class = ''): string
 {
     $path = __DIR__ . '/../../frontend/assets/img/' . $file;
     if (is_file($path)) {
-        return '<img src="frontend/assets/img/' . e($file) . '" alt="' . e($alt) . '" class="photo ' . e($class) . '" loading="lazy">';
+        return '<img src="frontend/assets/img/' . e($file) . '?v=' . filemtime($path) . '" alt="' . e($alt) . '" class="photo ' . e($class) . '" loading="lazy">';
     }
     return '<div class="photo photo-placeholder ' . e($class) . '" role="img" aria-label="' . e($alt) . '">'
         . icon('image') . '<span>' . e($alt) . '</span><small>' . e('frontend/assets/img/' . $file) . '</small></div>';
