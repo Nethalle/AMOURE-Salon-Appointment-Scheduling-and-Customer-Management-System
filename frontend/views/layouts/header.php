@@ -5,8 +5,10 @@
 // Admin and staff always get the app layout. Customers get it everywhere except the public home page.
 $currentPage = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'home';
 $isAuth      = ($layout ?? '') === 'auth';
-$isApp       = !$isAuth && $user && ($layout ?? '') !== 'site'
-    && (in_array($user['role'], ['admin', 'staff'], true) || $currentPage !== 'home');
+$isApp       = !$isAuth && $user && ($layout ?? '') !== 'site' && in_array($user['role'], ['admin', 'staff'], true);
+// Logged-in customers: website-style top bar (logo, menu, bell, profile) on every page.
+$isCust      = !$isAuth && $user && $user['role'] === 'customer';
+$isCustPage  = $isCust && $currentPage !== 'home';
 
 // route => [label, icon]
 $sidebar = [];
@@ -39,32 +41,19 @@ if ($user && $user['role'] === 'admin') {
 $isActive = static fn (string $route): bool =>
     $currentPage === $route || str_starts_with($currentPage, $route . '/');
 
-// Bell: pending requests for admin/staff, upcoming visits for customers.
-$bellCount = 0;
-$bellLink  = 'staff/appointments';
-$bellQuery = ['tab' => 'pending'];
-if ($isApp) {
+// Bell: in-app notifications (see backend/services/NotificationFeed.php).
+$notif = ['items' => [], 'unread' => 0];
+if ($isApp || $isCust) {
+    require_once __DIR__ . '/../../../backend/services/NotificationFeed.php';
     try {
-        if ($user['role'] === 'customer') {
-            $bellLink  = 'customer/my-appointments';
-            $bellQuery = [];
-            $stmt = db()->prepare(
-                "SELECT COUNT(*) FROM appointments a JOIN customers c ON c.id = a.customer_id
-                  WHERE c.user_id = :u AND a.status IN ('pending','confirmed') AND a.appt_date >= :d"
-            );
-            $stmt->execute(['u' => $user['id'], 'd' => date('Y-m-d')]);
-        } else {
-            $stmt = db()->prepare("SELECT COUNT(*) FROM appointments WHERE status = 'pending' AND appt_date >= :d");
-            $stmt->execute(['d' => date('Y-m-d')]);
-        }
-        $bellCount = (int) $stmt->fetchColumn();
+        $notif = NotificationFeed::for($user);
     } catch (Throwable $e) {
-        $bellCount = 0;
+        $notif = ['items' => [], 'unread' => 0]; // never break the page because of the bell
     }
 }
 $roleLabel = $user ? ['admin' => 'Admin', 'staff' => 'Staff', 'customer' => 'Customer'][$user['role']] ?? '' : '';
 
-$bodyClass = $isAuth ? 'layout-auth' : ($isApp ? 'layout-app' : 'layout-site');
+$bodyClass = $isAuth ? 'layout-auth' : ($isApp ? 'layout-app' : ($isCustPage ? 'layout-app layout-cust' : 'layout-site'));
 $phone     = setting('salon_phone');
 ?>
 <!doctype html>
@@ -79,7 +68,7 @@ $phone     = setting('salon_phone');
     <?php $css = __DIR__ . '/../../assets/css/'; ?>
     <link rel="stylesheet" href="frontend/assets/css/style.css?v=<?= @filemtime($css . 'style.css') ?>">
     <link rel="stylesheet" href="frontend/assets/css/home.css?v=<?= @filemtime($css . 'home.css') ?>">
-    <?php if ($isApp): ?>
+    <?php if ($isApp || $isCust): ?>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
     <link rel="stylesheet" href="frontend/assets/css/app.css?v=<?= @filemtime($css . 'app.css') ?>">
     <?php endif; ?>
@@ -120,10 +109,7 @@ $phone     = setting('salon_phone');
     <div class="app-main">
         <header class="app-top">
             <button type="button" class="app-menu-btn" data-toggle-side aria-label="Open menu"><span></span><span></span><span></span></button>
-            <a href="<?= e(url($bellLink, $bellQuery)) ?>" class="app-bell" aria-label="<?= $bellCount ?> notifications">
-                <?= icon('bell') ?>
-                <?php if ($bellCount > 0): ?><span class="app-bell-count"><?= $bellCount > 99 ? '99+' : $bellCount ?></span><?php endif; ?>
-            </a>
+            <?php require __DIR__ . '/_bell.php'; ?>
             <details class="app-user">
                 <summary>
                     <span class="app-avatar"><?= e(initials($user['name'])) ?></span>
@@ -153,14 +139,16 @@ $phone     = setting('salon_phone');
             <?php endif; ?>
 
 <?php else: ?>
+<?php if (!$isCustPage): ?>
 <div class="promo-bar">
     <p><?= icon('sparkle', 'icon icon-sm') ?> Book online in minutes &nbsp;|&nbsp; Look good. Feel amazing.</p>
     <?php if ($phone !== ''): ?>
         <p class="promo-contact"><?= icon('phone', 'icon icon-sm') ?> Call us: <a href="tel:<?= e(preg_replace('/[^0-9+]/', '', $phone)) ?>"><?= e($phone) ?></a></p>
     <?php endif; ?>
 </div>
+<?php endif; ?>
 
-<header class="site-header">
+<header class="site-header <?= $isCust ? 'cust-top' : '' ?>">
     <a class="brand" href="<?= e(url('home')) ?>">
         <span class="brand-mark" aria-hidden="true">A</span>
         <span class="brand-text">AMOURÉ <small>SALON</small></span>
@@ -176,15 +164,31 @@ $phone     = setting('salon_phone');
     </nav>
 
     <nav class="site-nav" aria-label="Account">
-        <?php if ($user): ?>
-            <a href="<?= e(url(home_for_role($user['role']))) ?>" class="nav-user"><?= icon('user', 'icon icon-sm') ?> <?= $user['role'] === 'customer' ? 'My appointments' : 'Dashboard' ?></a>
+        <?php if ($isCust): ?>
+            <?php require __DIR__ . '/_bell.php'; ?>
+            <details class="app-user">
+                <summary>
+                    <span class="app-avatar"><?= e(initials($user['name'])) ?></span>
+                    <span class="app-user-text"><strong><?= e($user['name']) ?></strong></span>
+                    <?= icon('chevron', 'icon icon-sm') ?>
+                </summary>
+                <div class="menu menu-right">
+                    <a href="<?= e(url('customer/my-appointments')) ?>"><?= icon('calendar') ?> My appointments</a>
+                    <a href="<?= e(url('customer/book')) ?>"><?= icon('plus') ?> Book appointment</a>
+                    <a href="<?= e(url('account/password')) ?>"><?= icon('key') ?> Change password</a>
+                    <hr>
+                    <form method="post" action="<?= e(url('logout')) ?>">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="danger"><?= icon('logout') ?> Log out</button>
+                    </form>
+                </div>
+            </details>
+        <?php elseif ($user): ?>
+            <a href="<?= e(url(home_for_role($user['role']))) ?>" class="nav-user"><?= icon('user', 'icon icon-sm') ?> Dashboard</a>
             <form method="post" action="<?= e(url('logout')) ?>" class="inline-form">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn btn-ghost btn-small">Log out</button>
             </form>
-            <?php if ($user['role'] === 'customer'): ?>
-                <a href="<?= e(url('customer/book')) ?>" class="btn btn-primary btn-small"><?= icon('calendar', 'icon icon-sm') ?> Book appointment</a>
-            <?php endif; ?>
         <?php else: ?>
             <a href="<?= e(url('login')) ?>" class="nav-user"><?= icon('user', 'icon icon-sm') ?> Log in</a>
             <a href="<?= e(url('register')) ?>" class="btn btn-primary btn-small"><?= icon('calendar', 'icon icon-sm') ?> Book appointment</a>
@@ -192,7 +196,7 @@ $phone     = setting('salon_phone');
     </nav>
 </header>
 
-<main class="page <?= $currentPage === 'home' ? 'page-home' : '' ?>">
+<main class="page <?= $currentPage === 'home' ? 'page-home' : '' ?> <?= $isCustPage ? 'app-page cust-page' : '' ?>">
     <?php if ($flashes): ?>
         <div class="flash-stack">
         <?php foreach ($flashes as $f): ?>

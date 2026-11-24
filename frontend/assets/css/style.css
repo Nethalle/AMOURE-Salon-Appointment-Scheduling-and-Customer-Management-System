@@ -1272,3 +1272,37 @@ a.nav-user { text-decoration: none; }
     .hero-split .hero-script { margin-left: 60px; }
 }
 .hero-split .display-rose { white-space: nowrap; }
+
+/* =============================================================
+   LOGIN / REGISTER: pink theme (matches the dashboard sidebar)
+   ============================================================= */
+.layout-auth { background: linear-gradient(135deg, #FBEDEA 0%, #F6DCD7 100%); }
+.auth-card-split { box-shadow: 0 24px 60px rgba(143, 74, 80, 0.18); }
+.auth-brand-panel {
+    background: linear-gradient(160deg, #B66D70 0%, #A15A5D 50%, #8F4A50 100%);
+    color: #FFF3F1;
+}
+.brand-light .brand-mark { border-color: #FFE3DE; color: #FFE3DE; }
+.brand-light .brand-text small { color: #FAD9D4; }
+.auth-headline em { color: #FFD6CF; }
+.auth-brand-copy p:last-child { color: #FCE7E3; }
+.auth-brand-panel .eyebrow-gold,
+.auth-brand-panel .eyebrow { color: #FFE3DE; }
+.auth-rings {
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 36px rgba(255, 255, 255, 0.05);
+}
+.auth-form-panel { background: #FFF9F8; }
+.auth-form-panel .eyebrow { color: #A85C5E; }
+.auth-title { color: #3A2A2A; }
+.auth-form-panel .form input:not([type="checkbox"]):not([type="hidden"]) { border-color: #EED5D0; background: #fff; }
+.auth-form-panel .form input:focus { outline: none; border-color: #A85C5E; box-shadow: 0 0 0 3px rgba(168, 92, 94, 0.15); }
+.btn-dark {
+    background: #A85C5E;
+    border-color: #A85C5E;
+    box-shadow: 0 8px 20px rgba(168, 92, 94, 0.28);
+}
+.btn-dark:hover { background: #8F4A50; border-color: #8F4A50; }
+.divider-text::before, .divider-text::after { background: #F0D6D1; }
+.strong-link { color: #A85C5E; }
+.strong-link:hover { color: #8F4A50; }
