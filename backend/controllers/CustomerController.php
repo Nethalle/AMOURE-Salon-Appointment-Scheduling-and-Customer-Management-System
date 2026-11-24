@@ -32,7 +32,10 @@ class CustomerController
             redirect('staff/customers/view', ['id' => $id]);
         }
 
-        $q = trim((string) ($_GET['q'] ?? ''));
+        $q    = trim((string) ($_GET['q'] ?? ''));
+        $page = max(1, (int) ($_GET['p'] ?? 1));
+        $per  = 10;
+
         $params = [];
         $where  = '';
         if ($q !== '') {
@@ -41,17 +44,23 @@ class CustomerController
             $params = ['q1' => $like, 'q2' => $like, 'q3' => $like];
         }
 
+        $stmt = db()->prepare("SELECT COUNT(*) FROM customers c $where");
+        $stmt->execute($params);
+        $total = (int) $stmt->fetchColumn();
+        $pages = max(1, (int) ceil($total / $per));
+        $page  = min($page, $pages);
+
         $stmt = db()->prepare(
             "SELECT c.id, c.full_name, c.phone, c.email, c.user_id,
                     COUNT(a.id) AS total,
                     SUM(CASE WHEN a.status = 'completed' THEN 1 ELSE 0 END) AS completed,
-                    MAX(CASE WHEN a.status = 'completed' THEN a.appt_date END) AS last_visit
+                    MAX(CASE WHEN a.status IN ('pending','confirmed','completed') THEN a.appt_date END) AS last_appt
                FROM customers c
                LEFT JOIN appointments a ON a.customer_id = c.id
                $where
               GROUP BY c.id, c.full_name, c.phone, c.email, c.user_id
               ORDER BY c.full_name
-              LIMIT 300"
+              LIMIT $per OFFSET " . (($page - 1) * $per)
         );
         $stmt->execute($params);
 
@@ -59,6 +68,10 @@ class CustomerController
             'title'     => 'Customers',
             'customers' => $stmt->fetchAll(),
             'q'         => $q,
+            'page'      => $page,
+            'pages'     => $pages,
+            'total'     => $total,
+            'per'       => $per,
         ]);
     }
 

@@ -1,91 +1,86 @@
 <?php /** @var array $stylists  @var array $services  @var int[] $checked */ ?>
-<div class="page-head">
-    <h1 class="card-title">Stylists</h1>
-    <p class="muted">Stylists customers can book, and the services each one performs.</p>
+<div class="ph">
+    <div>
+        <h1>Stylists</h1>
+        <p>Manage your salon stylists</p>
+    </div>
+    <?php if ($services): ?>
+        <button type="button" class="btn btn-primary" data-dialog="add-stylist"><?= icon('plus') ?> Add Stylist</button>
+    <?php else: ?>
+        <a href="<?= e(url('admin/services')) ?>" class="btn btn-ghost">Add a service first</a>
+    <?php endif; ?>
 </div>
 
-<div class="stack">
-    <section class="card">
-        <h2 class="section-title">Add a stylist</h2>
-        <?php if (!$services): ?>
-            <p class="muted">Add at least one active <a href="<?= e(url('admin/services')) ?>">service</a> first.</p>
-        <?php else: ?>
-        <form method="post" action="<?= e(url('admin/stylists')) ?>" class="form form-grid" novalidate>
-            <?= csrf_field() ?>
-
-            <div class="field">
-                <label for="full_name">Full name</label>
-                <input type="text" id="full_name" name="full_name" value="<?= old('full_name') ?>" required maxlength="100">
-            </div>
-
-            <div class="field">
-                <label for="specialty">Specialty (optional)</label>
-                <input type="text" id="specialty" name="specialty" value="<?= old('specialty') ?>" maxlength="100">
-            </div>
-
-            <fieldset class="checks">
-                <legend>Services this stylist performs</legend>
-                <div class="check-list">
-                <?php foreach ($services as $s): ?>
-                    <label class="check">
-                        <input type="checkbox" name="services[]" value="<?= e($s['id']) ?>" <?= in_array((int) $s['id'], $checked, true) ? 'checked' : '' ?>>
-                        <?= e($s['name']) ?>
-                    </label>
-                <?php endforeach; ?>
+<?php if (!$stylists): ?>
+    <section class="panel"><p class="empty">No stylists yet. Add the first one.</p></section>
+<?php else: ?>
+    <div class="sty-grid">
+        <?php foreach ($stylists as $st): $on = (int) $st['is_active']; $img = 'stylists/' . slugify($st['full_name']) . '.jpg'; ?>
+            <article class="sty-card <?= $on ? '' : 'is-off' ?>">
+                <div class="sty-photo">
+                    <?php if (photo_exists($img)): ?>
+                        <?= photo($img, $st['full_name']) ?>
+                    <?php else: ?>
+                        <span><?= e(initials($st['full_name'])) ?></span>
+                    <?php endif; ?>
                 </div>
-            </fieldset>
+                <h3><?= e($st['full_name']) ?></h3>
+                <p><?= e($st['specialty'] ?: 'Stylist') ?></p>
+                <?php if (!$on): ?><span class="badge badge-inactive" style="margin-top:8px">Inactive</span><?php endif; ?>
+                <div class="sty-tags">
+                    <?php foreach (array_slice($st['services'], 0, 3) as $name): ?><span><?= e($name) ?></span><?php endforeach; ?>
+                    <?php if (count($st['services']) > 3): ?><span>+<?= count($st['services']) - 3 ?></span><?php endif; ?>
+                </div>
+                <div class="sty-foot">
+                    <a href="<?= e(url('admin/stylists/edit', ['id' => $st['id']])) ?>" class="icon-btn" title="Edit" aria-label="Edit <?= e($st['full_name']) ?>"><?= icon('edit') ?></a>
+                    <form method="post" action="<?= e(url('admin/stylists/toggle')) ?>"
+                          <?= $on ? 'data-confirm="Deactivate this stylist? Customers will no longer be able to book them."' : '' ?>>
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= e($st['id']) ?>">
+                        <button type="submit" class="icon-btn" title="<?= $on ? 'Deactivate' : 'Activate' ?>" aria-label="<?= $on ? 'Deactivate' : 'Activate' ?> <?= e($st['full_name']) ?>"><?= icon('power') ?></button>
+                    </form>
+                </div>
+            </article>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
 
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Add stylist</button>
+<?php if ($services): ?>
+<dialog class="modal" id="add-stylist" <?= has_old() ? 'data-open' : '' ?>>
+    <form method="post" action="<?= e(url('admin/stylists')) ?>" novalidate>
+        <?= csrf_field() ?>
+        <div class="modal-head">
+            <h2>Add Stylist</h2>
+            <button type="button" class="modal-x" data-close aria-label="Close"><?= icon('x') ?></button>
+        </div>
+        <div class="modal-body">
+            <div class="f-grid">
+                <div class="field">
+                    <label for="full_name">Full name</label>
+                    <input type="text" id="full_name" name="full_name" value="<?= old('full_name') ?>" required maxlength="100">
+                </div>
+                <div class="field">
+                    <label for="specialty">Specialty (optional)</label>
+                    <input type="text" id="specialty" name="specialty" value="<?= old('specialty') ?>" maxlength="100">
+                </div>
             </div>
-        </form>
-        <?php endif; ?>
-    </section>
-
-    <section class="card">
-        <h2 class="section-title">All stylists</h2>
-        <?php if (!$stylists): ?>
-            <p class="muted">No stylists yet. Add the first one.</p>
-        <?php else: ?>
-            <div class="table-wrap">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th scope="col">Stylist</th>
-                            <th scope="col">Specialty</th>
-                            <th scope="col">Services</th>
-                            <th scope="col">Status</th>
-                            <th scope="col"><span class="sr-only">Actions</span></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($stylists as $st): ?>
-                        <tr class="<?= (int) $st['is_active'] ? '' : 'row-inactive' ?>">
-                            <td><?= e($st['full_name']) ?></td>
-                            <td><?= e($st['specialty'] ?? '—') ?></td>
-                            <td class="wrap"><?= $st['services'] ? e(implode(', ', $st['services'])) : '<span class="muted">None</span>' ?></td>
-                            <td>
-                                <span class="badge <?= (int) $st['is_active'] ? 'badge-completed' : 'badge-cancelled' ?>">
-                                    <?= (int) $st['is_active'] ? 'Active' : 'Inactive' ?>
-                                </span>
-                            </td>
-                            <td>
-                                <div class="actions">
-                                    <a href="<?= e(url('admin/stylists/edit', ['id' => $st['id']])) ?>" class="btn btn-small btn-ghost">Edit</a>
-                                    <form method="post" action="<?= e(url('admin/stylists/toggle')) ?>" class="inline-form">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="id" value="<?= e($st['id']) ?>">
-                                        <button type="submit" class="btn btn-small btn-ghost">
-                                            <?= (int) $st['is_active'] ? 'Deactivate' : 'Activate' ?>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
+            <div>
+                <span class="lbl" style="display:block;font-weight:600;font-size:13px;margin-bottom:8px">Services this stylist performs</span>
+                <div class="check-grid">
+                    <?php foreach ($services as $s): ?>
+                        <label>
+                            <input type="checkbox" name="services[]" value="<?= e($s['id']) ?>" <?= in_array((int) $s['id'], $checked, true) ? 'checked' : '' ?>>
+                            <?= e($s['name']) ?>
+                        </label>
                     <?php endforeach; ?>
-                    </tbody>
-                </table>
+                </div>
             </div>
-        <?php endif; ?>
-    </section>
-</div>
+            <small class="hint">Photo: save it as <code>frontend/assets/img/stylists/&lt;full-name&gt;.jpg</code>.</small>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="btn btn-primary">Add stylist</button>
+        </div>
+    </form>
+</dialog>
+<?php endif; ?>
