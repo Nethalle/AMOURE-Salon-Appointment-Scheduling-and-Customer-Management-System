@@ -52,12 +52,12 @@ $gallery = [
         <div class="service-grid">
             <?php foreach ($services as $s): ?>
                 <article class="service-card">
-                    <?= photo('services/' . slugify($s['name']) . '.jpg', $s['name'], 'service-photo') ?>
+                    <?= photo(category_photo($s['name']), $s['name'], 'service-photo') ?>
                     <div class="service-body">
-                        <span class="service-icon"><?= icon(service_icon($s['name'])) ?></span>
+                        <span class="service-icon"><?= icon(category_icon($s['name'])) ?></span>
                         <h3><?= e($s['name']) ?></h3>
-                        <p class="muted"><?= e($s['duration_minutes']) ?> min · <?= e(peso($s['price'])) ?></p>
-                        <a href="<?= e($user && $user['role'] === 'customer' ? url('customer/book', ['service' => $s['id']]) : url('register')) ?>" class="link-arrow">Book now <?= icon('arrow', 'icon icon-xs') ?></a>
+                        <p class="muted"><?= (int) $s['n'] ?> service<?= (int) $s['n'] === 1 ? '' : 's' ?> · from <?= e(peso($s['from_price'])) ?></p>
+                        <a href="<?= e($user && $user['role'] === 'customer' ? url('customer/book') . '#cat-' . slugify($s['name']) : url('register')) ?>" class="link-arrow">Book now <?= icon('arrow', 'icon icon-xs') ?></a>
                     </div>
                 </article>
             <?php endforeach; ?>

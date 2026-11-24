@@ -158,3 +158,58 @@ document.addEventListener('click', function (event) {
         }
     });
 });
+
+// Stylist forms: "Select all" ticks every service in that category (click again to untick).
+document.addEventListener('click', function (event) {
+    var btn = event.target.closest('[data-check-all]');
+    if (!btn) {
+        return;
+    }
+    var boxes = btn.closest('fieldset').querySelectorAll('input[type="checkbox"]');
+    var allOn = Array.prototype.every.call(boxes, function (b) { return b.checked; });
+    boxes.forEach(function (b) { b.checked = !allOn; });
+});
+
+// Booking step 1: search box filters services as you type; empty categories hide.
+(function () {
+    var input = document.getElementById('service-search');
+    if (!input) {
+        return;
+    }
+    var rows = document.querySelectorAll('.choice-row[data-search]');
+    var sections = document.querySelectorAll('.cat-section');
+    var chips = document.querySelectorAll('.cat-chips a');
+    var none = document.querySelector('.svc-none');
+
+    input.addEventListener('input', function () {
+        var words = input.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+        var shown = 0;
+        rows.forEach(function (row) {
+            var text = row.getAttribute('data-search');
+            var ok = words.every(function (w) { return text.indexOf(w) !== -1; });
+            row.hidden = !ok;
+            shown += ok ? 1 : 0;
+        });
+        sections.forEach(function (sec) {
+            var visible = sec.querySelectorAll('.choice-row:not([hidden])').length;
+            sec.hidden = visible === 0;
+            var chip = document.querySelector('.cat-chips a[href="#' + sec.id + '"]');
+            if (chip) {
+                chip.hidden = visible === 0;
+                var count = chip.querySelector('span');
+                if (count) {
+                    count.textContent = visible;
+                }
+            }
+        });
+        none.hidden = shown > 0;
+        none.querySelector('span').textContent = input.value.trim();
+    });
+    // Esc clears the search.
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            input.value = '';
+            input.dispatchEvent(new Event('input'));
+        }
+    });
+})();

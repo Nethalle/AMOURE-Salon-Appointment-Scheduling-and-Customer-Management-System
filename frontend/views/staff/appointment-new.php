@@ -20,11 +20,7 @@ $chosenCustomer = (int) ($_SESSION['old']['customer_id'] ?? $_GET['customer'] ??
                 <label for="service">Service</label>
                 <select id="service" name="service" required data-filters="stylist">
                     <option value="">Choose a service</option>
-                    <?php foreach ($services as $s): ?>
-                        <option value="<?= e($s['id']) ?>" <?= $pick['service_id'] === (int) $s['id'] ? 'selected' : '' ?>>
-                            <?= e($s['name']) ?> (<?= e($s['duration_minutes']) ?> min)
-                        </option>
-                    <?php endforeach; ?>
+                    <?= service_options($services, (int) $pick['service_id'], true) ?>
                 </select>
             </div>
             <div class="field">

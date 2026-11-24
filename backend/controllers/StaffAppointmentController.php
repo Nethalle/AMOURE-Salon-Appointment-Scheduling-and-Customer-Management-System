@@ -170,7 +170,7 @@ class StaffAppointmentController
             'perPage'      => self::PER_PAGE,
             'month'        => $m,
             'busyDays'     => $busyDays,
-            'services'     => db()->query('SELECT id, name FROM services ORDER BY name')->fetchAll(),
+            'services'     => db()->query('SELECT id, name, category FROM services ORDER BY name')->fetchAll(),
             'stylists'     => db()->query('SELECT id, full_name FROM stylists ORDER BY full_name')->fetchAll(),
             'back'         => http_build_query(array_filter([
                 'tab' => $f['tab'], 'date' => $f['date'], 'service' => $f['service'] ?: null,
@@ -243,7 +243,7 @@ class StaffAppointmentController
         view('staff/appointment-new', [
             'title'     => 'New appointment',
             'pick'      => $pick,
-            'services'  => db()->query('SELECT id, name, duration_minutes FROM services WHERE is_active = 1 ORDER BY name')->fetchAll(),
+            'services'  => db()->query('SELECT id, name, category, duration_minutes FROM services WHERE is_active = 1 ORDER BY name')->fetchAll(),
             'stylists'  => $this->stylistsWithServices(),
             'customers' => db()->query('SELECT id, full_name, phone FROM customers ORDER BY full_name')->fetchAll(),
         ]);

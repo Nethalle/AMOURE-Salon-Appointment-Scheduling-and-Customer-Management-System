@@ -70,6 +70,7 @@ CREATE TABLE stylists (
 CREATE TABLE services (
   id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name              VARCHAR(100) NOT NULL,
+  category          VARCHAR(50)  NOT NULL DEFAULT 'Other',   -- Haircut, Hair Color, Nail Care, ...
   price             DECIMAL(10,2) NOT NULL,
   duration_minutes  SMALLINT UNSIGNED NOT NULL,
   is_active         TINYINT(1) NOT NULL DEFAULT 1,

@@ -52,9 +52,7 @@ $calQuery = array_diff_key($keep, ['date' => 1]) + ($filters['tab'] !== 'all' &&
             <?php endif; ?>
             <select name="service" aria-label="Service">
                 <option value="">All Services</option>
-                <?php foreach ($services as $s): ?>
-                    <option value="<?= e($s['id']) ?>" <?= $filters['service'] === (int) $s['id'] ? 'selected' : '' ?>><?= e($s['name']) ?></option>
-                <?php endforeach; ?>
+                <?= service_options($services, (int) $filters['service']) ?>
             </select>
             <select name="stylist" aria-label="Stylist">
                 <option value="">All Stylists</option>

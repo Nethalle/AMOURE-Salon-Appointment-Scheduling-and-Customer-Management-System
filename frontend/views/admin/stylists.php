@@ -66,14 +66,7 @@
             </div>
             <div>
                 <span class="lbl" style="display:block;font-weight:600;font-size:13px;margin-bottom:8px">Services this stylist performs</span>
-                <div class="check-grid">
-                    <?php foreach ($services as $s): ?>
-                        <label>
-                            <input type="checkbox" name="services[]" value="<?= e($s['id']) ?>" <?= in_array((int) $s['id'], $checked, true) ? 'checked' : '' ?>>
-                            <?= e($s['name']) ?>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
+                <div class="svc-check-scroll"><?= service_checkboxes($services, $checked) ?></div>
             </div>
             <small class="hint">Photo: save it as <code>frontend/assets/img/stylists/&lt;full-name&gt;.jpg</code>.</small>
         </div>

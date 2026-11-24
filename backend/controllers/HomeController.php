@@ -7,9 +7,17 @@ class HomeController
 {
     public function index(): void
     {
-        $services = db()->query(
-            'SELECT id, name, price, duration_minutes FROM services WHERE is_active = 1 ORDER BY name LIMIT 6'
-        )->fetchAll();
+        // Service categories with how many services and the lowest price ("from ₱250").
+        $byCat = [];
+        foreach (db()->query('SELECT category, COUNT(*) AS n, MIN(price) AS from_price FROM services WHERE is_active = 1 GROUP BY category')->fetchAll() as $row) {
+            $byCat[$row['category']] = $row;
+        }
+        $services = [];
+        foreach (array_keys(SERVICE_CATEGORIES) as $cat) {
+            if (isset($byCat[$cat])) {
+                $services[] = ['name' => $cat] + $byCat[$cat];
+            }
+        }
 
         $stylists = db()->query(
             'SELECT full_name, specialty FROM stylists WHERE is_active = 1 ORDER BY id LIMIT 4'

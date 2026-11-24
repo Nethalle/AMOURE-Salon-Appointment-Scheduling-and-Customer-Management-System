@@ -12,15 +12,8 @@
         <label for="specialty">Specialty (optional)</label>
         <input type="text" id="specialty" name="specialty" value="<?= old_or('specialty', $stylist['specialty'] ?? '') ?>" maxlength="100">
 
-        <fieldset class="checks">
-            <legend>Services this stylist performs</legend>
-            <?php foreach ($services as $s): ?>
-                <label class="check">
-                    <input type="checkbox" name="services[]" value="<?= e($s['id']) ?>" <?= in_array((int) $s['id'], $checked, true) ? 'checked' : '' ?>>
-                    <?= e($s['name']) ?>
-                </label>
-            <?php endforeach; ?>
-        </fieldset>
+        <p class="lbl" style="font-weight:600;margin:14px 0 6px">Services this stylist performs</p>
+        <?= service_checkboxes($services, $checked) ?>
         <small class="hint">Only active services are listed. Removing a service doesn't change existing appointments.</small>
 
         <button type="submit" class="btn btn-primary btn-block">Save changes</button>
