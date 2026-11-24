@@ -1,4 +1,4 @@
-<?php /** @var array $values  @var array $logs  @var string $tab */
+<?php /** @var array $values  @var array $logs  @var string $tab  @var ?string $mailProblem  @var string $mailFrom */
 $val = static fn (string $key) => old_or($key, $values[$key]);
 $checked = static fn (string $key) => (isset($_SESSION['old']) ? isset($_SESSION['old'][$key]) : $values[$key] === '1') ? 'checked' : '';
 $typeLabels = ['confirmation' => 'Confirmation', 'cancellation' => 'Cancellation', 'reminder' => 'Reminder'];
@@ -132,6 +132,24 @@ $tabs = [
         </form>
 
         <?php if ($tab === 'notifications'): ?>
+            <section class="panel" style="margin-top:20px">
+                <div class="panel-head">
+                    <div>
+                        <h2>Email setup</h2>
+                        <?php if ($mailProblem): ?>
+                            <p class="mail-status mail-bad"><?= icon('x', 'icon icon-sm') ?> Not ready: <?= e($mailProblem) ?></p>
+                        <?php else: ?>
+                            <p class="mail-status mail-ok"><?= icon('check', 'icon icon-sm') ?> Set up. Emails are sent from <strong><?= e($mailFrom) ?></strong>. Send a test to be sure.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <form method="post" action="<?= e(url('admin/settings/test-email')) ?>" class="toolbar" style="margin:0">
+                    <?= csrf_field() ?>
+                    <input type="email" name="to" required placeholder="Send a test to… e.g. your own Gmail" class="grow" aria-label="Test email address">
+                    <button type="submit" class="btn btn-primary"><?= icon('mail') ?> Send test email</button>
+                </form>
+            </section>
+
             <section class="panel" style="margin-top:20px">
                 <div class="panel-head">
                     <div>

@@ -8,6 +8,56 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 final class Mailer
 {
+    /** Is mail set up at all? Returns null when ready, or what's missing. */
+    public static function setupProblem(): ?string
+    {
+        if (!is_file(__DIR__ . '/../../vendor/autoload.php')) {
+            return 'PHPMailer is not installed. Run "composer install" in the project folder.';
+        }
+        $configFile = __DIR__ . '/../config/mail.php';
+        if (!is_file($configFile)) {
+            return 'Missing backend/config/mail.php. Copy mail.example.php to mail.php and fill it in.';
+        }
+        $config = require $configFile;
+        if (str_contains((string) ($config['password'] ?? ''), 'app-password') || str_contains((string) ($config['username'] ?? ''), 'your-salon-email')) {
+            return 'backend/config/mail.php still has the example values. Enter your Gmail or Brevo SMTP details.';
+        }
+        if (!extension_loaded('openssl')) {
+            return 'PHP\'s openssl extension is off. In C:\\xampp\\php\\php.ini remove the ; before extension=openssl, then restart Apache.';
+        }
+        return null;
+    }
+
+    /** The sender address from mail.php (shown in Settings), or ''. */
+    public static function sender(): string
+    {
+        $configFile = __DIR__ . '/../config/mail.php';
+        if (!is_file($configFile)) {
+            return '';
+        }
+        $config = require $configFile;
+        return (string) ($config['from_email'] ?? '');
+    }
+
+    /** Turn an SMTP error into a short "what to do" tip. */
+    public static function hint(string $error): string
+    {
+        $e = strtolower($error);
+        return match (true) {
+            str_contains($e, 'authenticate') || str_contains($e, 'username and password') || str_contains($e, '535')
+                => 'The mail server refused the login. Gmail: use a 16-letter App Password, no spaces. Brevo: use your SMTP login and SMTP key from Brevo > SMTP & API. Check backend/config/mail.php.',
+            str_contains($e, 'connect') || str_contains($e, 'timed out') || str_contains($e, 'network')
+                => 'Could not reach the mail server. Check your internet, and the host in mail.php (smtp.gmail.com or smtp-relay.brevo.com), port 587, encryption tls.',
+            str_contains($e, 'certificate') || str_contains($e, 'ssl') || str_contains($e, 'crypto')
+                => 'A security certificate problem on this computer. Check that extension=openssl is on in php.ini and restart Apache.',
+            str_contains($e, 'sender') || str_contains($e, 'not authorized') || str_contains($e, 'not verified')
+                => 'The From address is not allowed. In Brevo, add and verify it under Senders, and use the same address as from_email in mail.php.',
+            str_contains($e, 'invalid address')
+                => 'The email address is not valid.',
+            default => '',
+        };
+    }
+
     /**
      * Send an email. Returns null when sent, or an error message when it failed.
      * Never throws, so a mail problem can't break a booking.
@@ -27,7 +77,7 @@ final class Mailer
         $config = require $configFile;
 
         if (str_contains((string) $config['password'], 'app-password') || str_contains((string) $config['username'], 'your-salon-email')) {
-            return 'backend/config/mail.php still has the example values. Enter your Gmail address and App Password.';
+            return 'backend/config/mail.php still has the example values. Enter your Gmail or Brevo SMTP details.';
         }
 
         $mail = new PHPMailer(true);
