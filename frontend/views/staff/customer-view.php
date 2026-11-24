@@ -43,7 +43,7 @@ $sourceLabels = ['online' => 'Online', 'walk_in' => 'Walk-in', 'phone' => 'Phone
                 </div>
             </div>
             <label for="notes">Notes</label>
-            <textarea id="notes" name="notes" rows="3" maxlength="1000" placeholder="e.g. prefers Stylist One, sensitive scalp, usual hair color"><?= old_or('notes', $customer['notes'] ?? '') ?></textarea>
+            <textarea id="notes" name="notes" rows="3" maxlength="1000" placeholder="e.g. prefers Sofia, sensitive scalp, usual hair color"><?= old_or('notes', $customer['notes'] ?? '') ?></textarea>
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Save details</button>
             </div>

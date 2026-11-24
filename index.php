@@ -35,6 +35,7 @@ $routes = [
     'account/password'         => ['UserController', 'changePassword'],
     'admin/settings'           => ['SettingsController', 'index'],
     'admin/settings/send-reminders' => ['SettingsController', 'sendReminders'],
+    'admin/settings/test-email'     => ['SettingsController', 'testEmail'],
     'staff/dashboard'          => ['DashboardController', 'staff'],
     'staff/appointments'       => ['StaffAppointmentController', 'index'],
     'staff/customers'          => ['CustomerController', 'index'],

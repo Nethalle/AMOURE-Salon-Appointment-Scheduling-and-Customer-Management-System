@@ -4,6 +4,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../services/NotificationService.php';
+require_once __DIR__ . '/../services/Mailer.php';
 
 class SettingsController
 {
@@ -38,7 +39,46 @@ class SettingsController
             $tab = 'bookings';
         }
 
-        view('admin/settings', ['title' => 'Settings', 'values' => $values, 'logs' => $logs, 'tab' => $tab]);
+        view('admin/settings', [
+            'title'       => 'Settings',
+            'values'      => $values,
+            'logs'        => $logs,
+            'tab'         => $tab,
+            'mailProblem' => Mailer::setupProblem(),
+            'mailFrom'    => Mailer::sender(),
+        ]);
+    }
+
+    /** "Send test email" button: sends one email so the admin can check the mail setup. */
+    public function testEmail(): void
+    {
+        $me = require_role(['admin']);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('admin/settings', ['tab' => 'notifications']);
+        }
+        csrf_check();
+
+        $to = strtolower(trim((string) ($_POST['to'] ?? '')));
+        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            flash('error', 'Enter a valid email address to send the test to.');
+            redirect('admin/settings', ['tab' => 'notifications']);
+        }
+        if ($problem = Mailer::setupProblem()) {
+            flash('error', 'Email is not set up yet: ' . $problem);
+            redirect('admin/settings', ['tab' => 'notifications']);
+        }
+
+        $html = render_email('test', ['name' => $me['name']]);
+        $text = "This is a test email from AMOURÉ SALON.\nIf you can read this, booking, cancellation and reminder emails will work too.";
+        $error = Mailer::send($to, $to, 'Test email from AMOURÉ SALON', $html, $text);
+
+        if ($error === null) {
+            flash('success', "Test email sent to $to. Check the inbox (and the Spam folder).");
+        } else {
+            $hint = Mailer::hint($error);
+            flash('error', 'The test email failed: ' . $error . ($hint ? ' → ' . $hint : ''));
+        }
+        redirect('admin/settings', ['tab' => 'notifications']);
     }
 
     /** "Send due reminders now" button: same logic as the scheduled job. */

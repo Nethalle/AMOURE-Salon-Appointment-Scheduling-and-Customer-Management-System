@@ -91,20 +91,20 @@ ON DUPLICATE KEY UPDATE
   is_active        = 1;
 
 -- 3. Stylist specialties.
-UPDATE stylists SET specialty = 'Haircut, perm and rebond'  WHERE id = 1;
-UPDATE stylists SET specialty = 'Hair color and treatment'  WHERE id = 2;
-UPDATE stylists SET specialty = 'Nails and waxing'          WHERE id = 3;
-UPDATE stylists SET specialty = 'Hair and make up'          WHERE id = 4;
+UPDATE stylists SET specialty = 'Haircut, Perm & Rebond'    WHERE id = 1;
+UPDATE stylists SET specialty = 'Hair Color & Treatment'    WHERE id = 2;
+UPDATE stylists SET specialty = 'Nails & Waxing'            WHERE id = 3;
+UPDATE stylists SET specialty = 'Hair Styling & Makeup'     WHERE id = 4;
 
 -- 4. Which stylist does which service (only adds links; existing ones stay).
--- Stylist One: haircut, form, blow dry / setting / iron
+-- Sofia Reyes: haircut, form, blow dry / setting / iron
 INSERT IGNORE INTO stylist_services (stylist_id, service_id)
 SELECT 1, id FROM services WHERE name IN (
   'Haircut', 'Haircut - Senior Stylist',
   'Traditional Perm', 'Hair Relax - Deluxe', 'Hair Relax - Premium', 'Hair Rebond - Deluxe', 'Hair Rebond - Premium',
   'Shampoo & Blow Dry', 'Shampoo Setting', 'Iron');
 
--- Stylist Two: color, treatment, form
+-- Isabella Torres: color, treatment, form
 INSERT IGNORE INTO stylist_services (stylist_id, service_id)
 SELECT 2, id FROM services WHERE name IN (
   'Root Color - Deluxe', 'Root Color - Premium', 'Full Color - Deluxe', 'Full Color - Premium', 'Highlights (Foil)', 'Color Conditioning',
@@ -113,7 +113,7 @@ SELECT 2, id FROM services WHERE name IN (
   'Traditional Perm', 'Hair Relax - Deluxe', 'Hair Relax - Premium', 'Hair Rebond - Deluxe', 'Hair Rebond - Premium',
   'Shampoo & Blow Dry');
 
--- Stylist Three: nail care, waxing
+-- Marco Villanueva: nail care, waxing
 INSERT IGNORE INTO stylist_services (stylist_id, service_id)
 SELECT 3, id FROM services WHERE name IN (
   'Manicure', 'Gel Manicure', 'Pedicure', 'Gel Pedicure', 'Gel Polish Removal', 'Foot Spa Regular', 'Foot Spa Premium',
@@ -122,7 +122,7 @@ SELECT 3, id FROM services WHERE name IN (
   'Eyebrows Wax', 'Eyebrows Shave', 'Upper Lip Wax', 'Lower Lip Wax', 'Underarm Wax',
   'Full Arm Wax', 'Half Leg Wax', 'Full Leg Wax', 'Brazilian Wax');
 
--- Stylist Four: hair & make up, eyebrows
+-- Ethan Cruz: hair & make up, eyebrows
 INSERT IGNORE INTO stylist_services (stylist_id, service_id)
 SELECT 4, id FROM services WHERE name IN (
   'Shampoo & Blow Dry', 'Shampoo Setting', 'Iron', 'Eye Make Up', 'Full Make Up', 'Hair Styling & Makeup', 'Eyebrows Wax', 'Eyebrows Shave');

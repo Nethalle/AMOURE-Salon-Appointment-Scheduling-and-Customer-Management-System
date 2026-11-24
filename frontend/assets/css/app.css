@@ -688,3 +688,124 @@ dialog.modal::backdrop { background: rgba(58, 35, 35, .45); }
 .svc-search input { width: 100%; height: 48px !important; border-radius: 12px !important; font-size: 15px !important; }
 .svc-none { background: #fff; border: 1px solid var(--app-line); border-radius: var(--app-radius); }
 .choice-row mark { background: #FCE3DE; color: inherit; border-radius: 3px; padding: 0 1px; }
+
+/* Settings: email status */
+.mail-status { display: block; margin: 6px 0 0; font-size: 13.5px; line-height: 1.5; }
+.mail-status .icon { vertical-align: -3px; margin-right: 4px; }
+.mail-ok { color: #2F7A4C; }
+.mail-bad { color: #B33A3A; }
+
+/* =============================================================
+   DARK MODE (logged-in pages). Switched by the moon/sun button in
+   the top bar; saved in the browser as amoure-theme.
+   ============================================================= */
+html[data-theme="dark"] { color-scheme: dark; }
+html[data-theme="dark"] .layout-app {
+    /* app.css colours */
+    --app-bg: #161113;
+    --app-card: #211A1C;
+    --app-line: #382C2F;
+    --app-rose: #D4898A;
+    --app-rose-dark: #E6A3A3;
+    --app-rose-soft: #3A2629;
+    --app-ink: #F4E9E7;
+    --app-muted: #B5A19E;
+    --app-shadow: 0 6px 24px rgba(0, 0, 0, .35);
+    /* style.css colours (older pages: booking, forms, password) */
+    --bg: #161113;
+    --paper: #211A1C;
+    --blush: #2C2124;
+    --blush-deep: #3A2629;
+    --rose: #B9787A;
+    --rose-btn: #B4686B;
+    --rose-btn-hover: #C77F80;
+    --rose-text: #E6A3A3;
+    --gold-text: #D9B977;
+    --ink: #F4E9E7;
+    --muted: #B5A19E;
+    --line: #382C2F;
+    --success-bg: #1E3326; --success-ink: #9ED7AE;
+    --error-bg: #3B1F1F;   --error-ink: #F2A9A3;
+    --shadow: 0 6px 24px rgba(0, 0, 0, .35);
+    background: var(--app-bg);
+    color: var(--app-ink);
+}
+html[data-theme="dark"] .app-side { background: linear-gradient(180deg, #6B3B40 0%, #552F33 50%, #3E2427 100%); }
+html[data-theme="dark"] .app-logout { background: #F4E9E7; color: #552F33; }
+html[data-theme="dark"] .app-top { background: rgba(28, 22, 24, .96); }
+
+/* white surfaces */
+html[data-theme="dark"] .layout-app :is(.menu, .notif-panel, .kpi, .svc-card, .sty-card, .cat-card, .sep-row, .choice-list, .icon-btn, .pager a, .cat-chips a, dialog.modal, .svc-none),
+html[data-theme="dark"] .layout-app .btn-ghost { background: var(--app-card); color: var(--app-ink); }
+html[data-theme="dark"] .layout-app :is(input, select, textarea) { background: #1A1416 !important; color: var(--app-ink); border-color: #45363A !important; }
+html[data-theme="dark"] .layout-app input::placeholder, html[data-theme="dark"] .layout-app textarea::placeholder { color: #8C7A77; }
+html[data-theme="dark"] .layout-app input[type="date"]::-webkit-calendar-picker-indicator,
+html[data-theme="dark"] .layout-app input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(.85); }
+
+/* tables and rows */
+html[data-theme="dark"] .layout-app .table th { background: #2A2023; color: var(--app-muted); }
+html[data-theme="dark"] .layout-app .table td { border-bottom-color: #2E2427; }
+html[data-theme="dark"] .layout-app .table tbody tr:hover td,
+html[data-theme="dark"] .layout-app :is(.choice-row:hover, .notif-list a:hover, .set-nav a:hover) { background: #2A2023; }
+html[data-theme="dark"] .layout-app :is(.choice-row, .switch) { border-bottom-color: #2E2427; }
+html[data-theme="dark"] .notif-list li.is-unread a { background: #2E2124; }
+html[data-theme="dark"] .notif-list li.is-unread a:hover { background: #372629; }
+html[data-theme="dark"] .notif-text { color: #DCCBC8; }
+html[data-theme="dark"] .rev-body p { color: #DCCBC8; }
+html[data-theme="dark"] .cat-card, html[data-theme="dark"] .cat-photo { background-color: var(--app-card); }
+html[data-theme="dark"] .cat-photo { background: var(--app-rose-soft); }
+html[data-theme="dark"] .sty-photo { box-shadow: 0 0 0 4px var(--app-card), 0 0 0 5px var(--app-line); }
+html[data-theme="dark"] .mini-cal td.other a { color: #5E4F4C; }
+html[data-theme="dark"] .toggle span { background: #4A3B3E; }
+
+/* chips, counts, tags */
+html[data-theme="dark"] .layout-app :is(.tabbar .count, .cat-chips a span, .sty-tags span) { background: #2E2427; color: var(--app-muted); }
+html[data-theme="dark"] .chart .grid { stroke: #32282B; }
+html[data-theme="dark"] .chart .bar { fill: #8E5558; }
+html[data-theme="dark"] .chart .dot { fill: var(--app-card); }
+
+/* status badges: darker backgrounds, lighter text */
+html[data-theme="dark"] .layout-app .badge-pending   { background: #3A2C16; color: #F0C77E; }
+html[data-theme="dark"] .layout-app :is(.badge-confirmed, .badge-active, .badge-approved) { background: #1E3326; color: #9ED7AE; }
+html[data-theme="dark"] .layout-app .badge-completed { background: #1D2B40; color: #A9C4F0; }
+html[data-theme="dark"] .layout-app .badge-cancelled { background: #3B1F1F; color: #F2A9A3; }
+html[data-theme="dark"] .layout-app :is(.badge-no_show, .badge-inactive, .badge-removed, .badge-hidden) { background: #2E2729; color: #C2B3B0; }
+html[data-theme="dark"] .layout-app .badge-role-admin    { background: #3A2629; color: #E6A3A3; }
+html[data-theme="dark"] .layout-app .badge-role-staff    { background: #362C1A; color: #D9B977; }
+html[data-theme="dark"] .layout-app .badge-role-customer { background: #23293A; color: #AEBBDA; }
+html[data-theme="dark"] .notif-x, html[data-theme="dark"] .menu .danger, html[data-theme="dark"] .menu .danger .icon { color: #F2A9A3; }
+html[data-theme="dark"] .notif-x { background: #3B1F1F; }
+html[data-theme="dark"] .notif-check { background: #1E3326; color: #9ED7AE; }
+html[data-theme="dark"] .notif-star { background: #3A2C16; color: #F0C77E; }
+html[data-theme="dark"] .mail-ok, html[data-theme="dark"] .up { color: #9ED7AE; }
+html[data-theme="dark"] .mail-bad, html[data-theme="dark"] .down { color: #F2A9A3; }
+html[data-theme="dark"] .layout-app .notice { background: #33291A; color: #EAD3A8; border-color: #4A3B22; }
+html[data-theme="dark"] .layout-app .notice a { color: #F0C77E; }
+html[data-theme="dark"] .choice-row mark { background: #5A3438; }
+
+/* older pages (booking steps, forms) */
+html[data-theme="dark"] .layout-app :is(.choice, .slot, .day, .summary, .review-card) { background: var(--app-card); border-color: var(--app-line); color: var(--app-ink); }
+html[data-theme="dark"] .layout-app .page-head a:not(.btn), html[data-theme="dark"] .layout-app .card a:not(.btn), html[data-theme="dark"] .layout-app .hint a, html[data-theme="dark"] .layout-app .ph a:not(.btn) { color: var(--app-rose-dark); }
+
+/* theme button in the top bar */
+.theme-btn {
+    display: grid; place-items: center; width: 40px; height: 40px; margin-left: auto;
+    border: 0; border-radius: 50%; background: none; color: var(--app-ink); cursor: pointer;
+}
+.theme-btn:hover { background: var(--app-rose-soft); }
+.theme-btn .icon { width: 20px; height: 20px; }
+.theme-btn .moon { display: block; } .theme-btn .sun { display: none; }
+html[data-theme="dark"] .theme-btn .moon { display: none; }
+html[data-theme="dark"] .theme-btn .sun { display: block; }
+.app-top .theme-btn + .app-user { margin-left: 8px; }
+/* Dark mode: keep primary buttons a deep rose so white text stays readable. */
+html[data-theme="dark"] .layout-app .btn-primary,
+html[data-theme="dark"] .layout-app .btn-dark { background: #A85C5E; border-color: #A85C5E; color: #fff; box-shadow: 0 6px 16px rgba(0, 0, 0, .35); }
+html[data-theme="dark"] .layout-app .btn-primary:hover,
+html[data-theme="dark"] .layout-app .btn-dark:hover { background: #BC6E70; border-color: #BC6E70; }
+html[data-theme="dark"] .layout-app .pill-rose { background: #A85C5E; }
+
+/* Top bar: [ theme ] [ bell ] [ user ] grouped on the right */
+.app-top .notif { margin-left: 4px; }
+.app-top .notif-panel { left: auto; right: -8px; }
+.app-top .theme-btn + .notif + .app-user { margin-left: 8px; }

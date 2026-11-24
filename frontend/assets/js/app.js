@@ -213,3 +213,13 @@ document.addEventListener('click', function (event) {
         }
     });
 })();
+
+// Light / dark mode: the moon/sun button in the top bar. Remembered in this browser.
+document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var root = document.documentElement;
+        var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        try { localStorage.setItem('amoure-theme', next); } catch (e) { /* private mode: just this page */ }
+    });
+});

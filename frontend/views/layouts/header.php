@@ -62,6 +62,7 @@ $phone     = setting('salon_phone');
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>try{var t=localStorage.getItem('amoure-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}</script>
     <title><?= e($title ?? 'AMOURÉ SALON') ?> · AMOURÉ SALON</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -110,6 +111,9 @@ $phone     = setting('salon_phone');
     <div class="app-main">
         <header class="app-top">
             <button type="button" class="app-menu-btn" data-toggle-side aria-label="Open menu"><span></span><span></span><span></span></button>
+            <button type="button" class="theme-btn" data-theme-toggle aria-label="Switch light / dark mode" title="Light / dark mode">
+                <?= icon('moon', 'icon moon') ?><?= icon('sun', 'icon sun') ?>
+            </button>
             <?php require __DIR__ . '/_bell.php'; ?>
             <details class="app-user">
                 <summary>
