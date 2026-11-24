@@ -34,10 +34,10 @@ INSERT INTO customers (id, user_id, full_name, phone, email, notes) VALUES
 
 -- ---------- stylists ----------
 INSERT INTO stylists (id, full_name, specialty) VALUES
-  (1, 'Stylist One',   'Haircut and styling'),
-  (2, 'Stylist Two',   'Hair color and treatment'),
-  (3, 'Stylist Three', 'Nails'),
-  (4, 'Stylist Four',  'Blow dry and styling');
+  (1, 'Sofia Reyes',      'Haircut, Perm & Rebond'),
+  (2, 'Isabella Torres',  'Hair Color & Treatment'),
+  (3, 'Marco Villanueva', 'Nails & Waxing'),
+  (4, 'Ethan Cruz',       'Hair Styling & Makeup');
 
 -- ---------- services ----------
 INSERT INTO services (id, name, category, price, duration_minutes) VALUES
