@@ -1,31 +1,91 @@
-<?php /** @var array $services */ ?>
-<div class="ph">
+<?php /** @var array $services  @var string $category  @var array $stylistsPerCat */
+$groups     = group_services($services);
+$activeRows = array_filter($services, fn ($s) => (int) $s['is_active']);
+$activeGrp  = group_services($activeRows);
+$mainCats   = array_diff_key($activeGrp, array_flip(SEPARATE_CATEGORIES), ['Other' => 1]);
+$shown      = $category !== '' ? [$category => $groups[$category] ?? []] : [];
+?>
+<?php if ($category === ''): ?>
+<div class="ph ph-line">
     <div>
-        <h1>Services</h1>
-        <p>Manage your salon services</p>
+        <h1>Services Management</h1>
+        <p>Manage your salon services and pricing.</p>
     </div>
     <button type="button" class="btn btn-primary" data-dialog="add-service"><?= icon('plus') ?> Add Service</button>
 </div>
 
-<?php if (!$services): ?>
-    <section class="panel"><p class="empty">No services yet. Add the first one.</p></section>
+<div class="sec-head">
+    <h2>Salon Services</h2>
+    <span class="pill-rose"><?= count($mainCats) ?> categories</span>
+</div>
+<div class="cat-grid">
+    <?php foreach ($mainCats as $cat => $rows): $img = category_photo($cat); ?>
+        <a class="cat-card" href="<?= e(url('admin/services', ['category' => $cat])) ?>">
+            <span class="cat-photo">
+                <?php if (photo_exists($img)): ?>
+                    <?= photo($img, $cat) ?>
+                <?php else: ?>
+                    <?= icon(category_icon($cat)) ?>
+                <?php endif; ?>
+            </span>
+            <span class="cat-info">
+                <?= icon(category_icon($cat), 'icon cat-line-icon') ?>
+                <strong><?= e($cat) ?></strong>
+                <span><?= count($rows) ?> <?= $cat === 'Perming & Rebonding' ? 'option' : 'service' ?><?= count($rows) === 1 ? '' : 's' ?></span>
+            </span>
+            <?= icon('chev-right', 'icon cat-go') ?>
+        </a>
+    <?php endforeach; ?>
+</div>
+
+<div class="sec-head sec-line">
+    <h2>Separate Management</h2>
+</div>
+<?php foreach (SEPARATE_CATEGORIES as $cat): $n = $stylistsPerCat[$cat] ?? 0; ?>
+    <a class="sep-row" href="<?= e(url('admin/services', ['category' => $cat])) ?>">
+        <span class="sep-icon"><?= icon('users') ?></span>
+        <span class="sep-text">
+            <strong>Senior Hairstylists</strong>
+            <span>Manage hairstylists and their service rates.</span>
+        </span>
+        <span class="pill-soft"><?= $n ?> stylist<?= $n === 1 ? '' : 's' ?></span>
+        <?= icon('chev-right', 'icon sep-go') ?>
+    </a>
+<?php endforeach; ?>
+<?php if (isset($groups['Other'])): ?>
+    <p class="hint" style="margin-top:14px"><a href="<?= e(url('admin/services', ['category' => 'Other'])) ?>"><?= count($groups['Other']) ?> old / uncategorized services</a> (not shown to customers)</p>
+<?php endif; ?>
+
 <?php else: ?>
-    <div class="svc-grid">
-        <?php foreach ($services as $s): $on = (int) $s['is_active']; $img = 'services/' . slugify($s['name']) . '.jpg'; ?>
-            <article class="svc-card <?= $on ? '' : 'is-off' ?>">
-                <div class="svc-media">
-                    <?php if (photo_exists($img)): ?>
-                        <?= photo($img, $s['name']) ?>
-                    <?php else: ?>
-                        <?= icon(service_icon($s['name'])) ?>
-                    <?php endif; ?>
-                </div>
-                <?php if (!$on): ?><span class="badge badge-inactive svc-flag">Inactive</span><?php endif; ?>
+<div class="ph">
+    <div>
+        <p><a href="<?= e(url('admin/services')) ?>" class="back-link"><?= icon('chev-left', 'icon icon-sm') ?> All categories</a></p>
+        <h1><span class="cat-icon cat-icon-lg"><?= icon(category_icon($category)) ?></span> <?= $category === 'Haircut' ? 'Haircut · Senior Hairstylists' : e($category) ?></h1>
+        <p><?= count($shown[$category]) ?> service<?= count($shown[$category]) === 1 ? '' : 's' ?><?php if ($category === 'Haircut'): ?> · <a href="<?= e(url('admin/stylists')) ?>">Manage stylists →</a><?php endif; ?></p>
+    </div>
+    <button type="button" class="btn btn-primary" data-dialog="add-service"><?= icon('plus') ?> Add Service</button>
+</div>
+
+<nav class="cat-chips" aria-label="Categories">
+    <?php foreach ($groups as $cat => $rows): ?>
+        <a href="<?= e(url('admin/services', ['category' => $cat])) ?>" <?= $category === $cat ? 'aria-current="page"' : '' ?>>
+            <?= icon(category_icon($cat), 'icon icon-sm') ?> <?= e($cat) ?> <span><?= count($rows) ?></span>
+        </a>
+    <?php endforeach; ?>
+</nav>
+<?php endif; ?>
+
+<?php foreach ($shown as $cat => $rows): ?>
+    <?php if (!$rows): ?><section class="panel"><p class="empty">No services in this category yet.</p></section><?php continue; endif; ?>
+    <section class="cat-section">
+        <div class="svc-grid">
+        <?php foreach ($rows as $s): $on = (int) $s['is_active']; ?>
+            <article class="svc-card svc-compact <?= $on ? '' : 'is-off' ?>">
                 <div class="svc-body">
                     <div>
-                        <h3><?= e($s['name']) ?></h3>
+                        <h3><?= e($s['name']) ?> <?php if (!$on): ?><span class="badge badge-inactive">Inactive</span><?php endif; ?></h3>
                         <div class="svc-meta">
-                            <span><?= e(fmt_duration((int) $s['duration_minutes'])) ?></span> ·
+                            <span><?= icon('clock', 'icon icon-xs') ?> <?= e(fmt_duration((int) $s['duration_minutes'])) ?></span> ·
                             <strong><?= e(peso($s['price'])) ?></strong>
                         </div>
                         <span class="cell-sub" style="margin-top:4px"><?= (int) $s['stylist_count'] ?> stylist<?= (int) $s['stylist_count'] === 1 ? '' : 's' ?></span>
@@ -45,9 +105,9 @@
                 </div>
             </article>
         <?php endforeach; ?>
-    </div>
-    <p class="hint" style="margin-top:16px">Tip: add a photo named <code>frontend/assets/img/services/&lt;service-name&gt;.jpg</code> (e.g. <code>hair-color.jpg</code>) and it shows here and on the website.</p>
-<?php endif; ?>
+        </div>
+    </section>
+<?php endforeach; ?>
 
 <dialog class="modal" id="add-service" <?= has_old() ? 'data-open' : '' ?>>
     <form method="post" action="<?= e(url('admin/services')) ?>" novalidate>
@@ -60,6 +120,10 @@
             <div class="field">
                 <label for="name">Service name</label>
                 <input type="text" id="name" name="name" value="<?= old('name') ?>" required maxlength="100">
+            </div>
+            <div class="field">
+                <label for="category">Category</label>
+                <select id="category" name="category" required><?= category_options($_SESSION['old']['category'] ?? $category) ?></select>
             </div>
             <div class="f-grid">
                 <div class="field">

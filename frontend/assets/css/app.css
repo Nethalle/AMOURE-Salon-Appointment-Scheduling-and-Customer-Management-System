@@ -583,3 +583,108 @@ dialog.modal::backdrop { background: rgba(58, 35, 35, .45); }
 .notif-list li.is-unread .notif-body small::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--app-rose); vertical-align: 1px; }
 .notif-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 0; padding: 34px 18px; color: var(--app-muted); font-size: 13.5px; }
 .notif-empty .icon { width: 28px; height: 28px; opacity: .5; }
+
+/* =============================================================
+   Service categories (admin services, booking, stylist forms)
+   ============================================================= */
+.cat-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+.cat-chips a {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 14px; border: 1px solid var(--app-line); border-radius: 999px;
+    background: #fff; color: var(--app-ink); font-size: 13.5px; font-weight: 500; text-decoration: none;
+}
+.cat-chips a .icon { color: var(--app-rose); }
+.cat-chips a span { min-width: 20px; padding: 0 6px; border-radius: 999px; background: #F4ECEA; color: var(--app-muted); font-size: 11.5px; font-weight: 600; text-align: center; }
+.cat-chips a:hover { border-color: var(--app-rose); }
+.cat-chips a[aria-current="page"] { background: var(--app-rose); border-color: var(--app-rose); color: #fff; }
+.cat-chips a[aria-current="page"] .icon { color: #fff; }
+.cat-chips a[aria-current="page"] span { background: rgba(255,255,255,.25); color: #fff; }
+
+.cat-section { margin-bottom: 30px; scroll-margin-top: 90px; }
+.cat-title { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; font: 700 18px 'DM Sans', sans-serif; color: var(--app-ink); }
+.cat-title .kpi-icon { width: 38px; height: 38px; border-radius: 11px; }
+.cat-title .kpi-icon .icon { width: 19px; height: 19px; }
+.cat-title small { font-size: 13px; font-weight: 500; color: var(--app-muted); }
+
+.svc-compact .svc-body { padding: 16px 18px; }
+.svc-compact h3 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.svc-meta .icon-xs { width: 13px; height: 13px; vertical-align: -2px; }
+
+/* Booking: list rows inside each category */
+.choice-list { background: #fff; border: 1px solid var(--app-line); border-radius: var(--app-radius); box-shadow: var(--app-shadow); overflow: hidden; }
+.choice-row { display: flex; align-items: center; gap: 14px; padding: 15px 20px; color: var(--app-ink); text-decoration: none; border-bottom: 1px solid #F5EBE8; }
+.choice-row:last-child { border-bottom: 0; }
+.choice-row:hover { background: #FDF5F3; }
+.choice-row-name { flex: 1; display: flex; flex-direction: column; gap: 3px; font-weight: 600; }
+.choice-row-name small { font-weight: 400; color: var(--app-muted); font-size: 12.5px; }
+.choice-row-name .icon-xs { width: 12px; height: 12px; vertical-align: -1px; }
+.choice-row-price { font-weight: 700; color: var(--app-rose-dark); }
+.choice-row > .icon { color: var(--app-muted); }
+
+/* Stylist forms: service checkboxes by category */
+.svc-checks { border: 0; margin: 0 0 14px; padding: 0; }
+.svc-checks legend { display: flex; align-items: center; gap: 6px; width: 100%; padding: 0; margin-bottom: 8px; font-weight: 700; font-size: 13px; color: var(--app-ink); }
+.svc-checks legend .icon { color: var(--app-rose); }
+.link-btn { margin-left: auto; border: 0; background: none; padding: 0; color: var(--app-rose); font: 600 12px 'DM Sans', sans-serif; cursor: pointer; }
+.link-btn:hover { text-decoration: underline; }
+.svc-check-scroll { max-height: 46vh; overflow-y: auto; padding-right: 4px; }
+
+/* Services overview: category cards */
+.ph-line { padding-bottom: 20px; border-bottom: 1px solid var(--app-line); }
+.sec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 16px; }
+.sec-head h2 { margin: 0; font: 700 22px 'Playfair Display', 'Cormorant Garamond', serif; color: var(--app-ink); }
+.sec-line { margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--app-line); }
+.pill-rose { padding: 6px 14px; border-radius: 999px; background: var(--app-rose); color: #fff; font-size: 13px; font-weight: 600; }
+.pill-soft { padding: 6px 16px; border-radius: 999px; background: var(--app-rose-soft); color: var(--app-rose-dark); font-size: 13px; font-weight: 600; white-space: nowrap; }
+
+.cat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.cat-card {
+    position: relative; display: flex; align-items: center; gap: 16px;
+    padding: 12px 40px 12px 12px; background: #fff; border: 1px solid var(--app-line); border-radius: 16px;
+    box-shadow: var(--app-shadow); color: var(--app-ink); text-decoration: none;
+    transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.cat-card:hover { border-color: var(--app-rose); box-shadow: 0 12px 28px rgba(168, 92, 94, .14); transform: translateY(-2px); }
+.cat-photo {
+    position: relative; flex-shrink: 0; width: 118px; height: 112px; border-radius: 12px; overflow: hidden;
+    display: grid; place-items: center; background: var(--app-rose-soft); color: var(--app-rose);
+}
+.cat-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+.cat-photo > .icon { width: 36px; height: 36px; }
+.cat-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.cat-line-icon { width: 24px; height: 24px; color: var(--app-rose); margin-bottom: 6px; }
+.cat-info strong { font: 700 18px 'Playfair Display', 'Cormorant Garamond', serif; line-height: 1.2; }
+.cat-info > span { color: var(--app-muted); font-size: 13.5px; }
+.cat-go { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--app-rose); }
+
+.sep-row {
+    display: flex; align-items: center; gap: 16px; padding: 18px 22px;
+    background: #fff; border: 1px solid var(--app-line); border-radius: 16px; box-shadow: var(--app-shadow);
+    color: var(--app-ink); text-decoration: none; transition: border-color .15s;
+}
+.sep-row:hover { border-color: var(--app-rose); }
+.sep-icon { display: grid; place-items: center; flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; background: var(--app-rose-soft); color: var(--app-rose); }
+.sep-icon .icon { width: 22px; height: 22px; }
+.sep-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.sep-text strong { font: 700 19px 'Playfair Display', 'Cormorant Garamond', serif; }
+.sep-text span { color: var(--app-muted); font-size: 13.5px; }
+.sep-go { width: 18px; height: 18px; color: var(--app-rose); }
+
+.cat-icon { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--app-rose-soft); color: var(--app-rose); flex-shrink: 0; }
+.cat-icon .icon { width: 20px; height: 20px; }
+.cat-icon-lg { width: 44px; height: 44px; vertical-align: middle; margin-right: 6px; }
+.back-link { display: inline-flex; align-items: center; gap: 4px; color: var(--app-rose); font-weight: 600; font-size: 13px; text-decoration: none; margin-bottom: 6px; }
+.back-link:hover { text-decoration: underline; }
+
+/* The "⋯" menu must not be cut off by the card. */
+.svc-card.svc-compact { overflow: visible; }
+.svc-card .dots[open] .menu { z-index: 70; }
+
+@media (max-width: 1200px) { .cat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px)  { .cat-grid { grid-template-columns: 1fr; } .cat-photo { width: 96px; height: 92px; } }
+
+/* Booking: service search */
+.svc-search { max-width: 520px; margin-bottom: 16px; }
+.svc-search input { width: 100%; height: 48px !important; border-radius: 12px !important; font-size: 15px !important; }
+.svc-none { background: #fff; border: 1px solid var(--app-line); border-radius: var(--app-radius); }
+.choice-row mark { background: #FCE3DE; color: inherit; border-radius: 3px; padding: 0 1px; }

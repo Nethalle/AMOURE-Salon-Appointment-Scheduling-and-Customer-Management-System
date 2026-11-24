@@ -157,7 +157,7 @@ class StylistController
 
     private function activeServices(): array
     {
-        return db()->query('SELECT id, name FROM services WHERE is_active = 1 ORDER BY name')->fetchAll();
+        return db()->query('SELECT id, name, category FROM services WHERE is_active = 1 ORDER BY name')->fetchAll();
     }
 
     /** Replace the stylist's service list. */

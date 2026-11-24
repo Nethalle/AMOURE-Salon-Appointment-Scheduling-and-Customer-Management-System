@@ -28,22 +28,45 @@ class ServiceController
             }
 
             $stmt = db()->prepare(
-                'INSERT INTO services (name, price, duration_minutes) VALUES (:name, :price, :duration)'
+                'INSERT INTO services (name, category, price, duration_minutes) VALUES (:name, :category, :price, :duration)'
             );
             $stmt->execute($data);
 
             flash('success', 'Service "' . $data['name'] . '" added.');
-            redirect('admin/services');
+            redirect('admin/services', ['category' => $data['category']]);
         }
 
         $services = db()->query(
-            'SELECT s.id, s.name, s.price, s.duration_minutes, s.is_active,
+            'SELECT s.id, s.name, s.category, s.price, s.duration_minutes, s.is_active,
                     (SELECT COUNT(*) FROM stylist_services ss WHERE ss.service_id = s.id) AS stylist_count
                FROM services s
               ORDER BY s.is_active DESC, s.name'
         )->fetchAll();
 
-        view('admin/services', ['title' => 'Services', 'services' => $services]);
+        $category = (string) ($_GET['category'] ?? '');
+        if (!isset(SERVICE_CATEGORIES[$category]) && $category !== 'Other') {
+            $category = '';
+        }
+
+        // Active stylists per category (for the "Separate management" cards).
+        $stylistsPerCat = [];
+        foreach (db()->query(
+            'SELECT s.category, COUNT(DISTINCT st.id) AS n
+               FROM services s
+               JOIN stylist_services ss ON ss.service_id = s.id
+               JOIN stylists st ON st.id = ss.stylist_id AND st.is_active = 1
+              WHERE s.is_active = 1
+              GROUP BY s.category'
+        )->fetchAll() as $row) {
+            $stylistsPerCat[$row['category']] = (int) $row['n'];
+        }
+
+        view('admin/services', [
+            'title'          => 'Services',
+            'services'       => $services,
+            'category'       => $category,
+            'stylistsPerCat' => $stylistsPerCat,
+        ]);
     }
 
     /** Edit one service. */
@@ -75,12 +98,12 @@ class ServiceController
             }
 
             $stmt = db()->prepare(
-                'UPDATE services SET name = :name, price = :price, duration_minutes = :duration WHERE id = :id'
+                'UPDATE services SET name = :name, category = :category, price = :price, duration_minutes = :duration WHERE id = :id'
             );
             $stmt->execute($data + ['id' => $id]);
 
             flash('success', 'Service "' . $data['name'] . '" updated.');
-            redirect('admin/services');
+            redirect('admin/services', ['category' => $data['category']]);
         }
 
         view('admin/service-edit', ['title' => 'Edit service', 'service' => $service]);
@@ -107,7 +130,7 @@ class ServiceController
         $stmt->execute(['active' => $newState, 'id' => $id]);
 
         flash('success', 'Service "' . $service['name'] . '" ' . ($newState ? 'activated.' : 'deactivated. It can no longer be booked.'));
-        redirect('admin/services');
+        redirect('admin/services', isset(SERVICE_CATEGORIES[$service['category'] ?? '']) ? ['category' => $service['category']] : []);
     }
 
     // ---------- helpers ----------
@@ -135,6 +158,7 @@ class ServiceController
         $name     = trim((string) ($input['name'] ?? ''));
         $price    = trim((string) ($input['price'] ?? ''));
         $duration = trim((string) ($input['duration_minutes'] ?? ''));
+        $category = (string) ($input['category'] ?? '');
 
         $errors = [];
         if ($name === '' || mb_strlen($name) > 100) {
@@ -143,12 +167,15 @@ class ServiceController
         if (!is_numeric($price) || (float) $price < 0 || (float) $price > 999999) {
             $errors[] = 'Enter a price between 0 and 999,999.';
         }
+        if (!isset(SERVICE_CATEGORIES[$category])) {
+            $errors[] = 'Choose a category.';
+        }
         if (!ctype_digit($duration) || (int) $duration < 5 || (int) $duration > 600) {
             $errors[] = 'Enter a duration between 5 and 600 minutes.';
         }
 
         return [
-            ['name' => $name, 'price' => round((float) $price, 2), 'duration' => (int) $duration],
+            ['name' => $name, 'category' => $category, 'price' => round((float) $price, 2), 'duration' => (int) $duration],
             $errors,
         ];
     }

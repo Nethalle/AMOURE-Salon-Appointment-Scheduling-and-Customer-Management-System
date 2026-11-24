@@ -5,10 +5,11 @@
 // Admin and staff always get the app layout. Customers get it everywhere except the public home page.
 $currentPage = is_string($_GET['page'] ?? null) ? $_GET['page'] : 'home';
 $isAuth      = ($layout ?? '') === 'auth';
-$isApp       = !$isAuth && $user && ($layout ?? '') !== 'site' && in_array($user['role'], ['admin', 'staff'], true);
-// Logged-in customers: website-style top bar (logo, menu, bell, profile) on every page.
-$isCust      = !$isAuth && $user && $user['role'] === 'customer';
-$isCustPage  = $isCust && $currentPage !== 'home';
+// Admin and staff always get the app layout. Customers get it everywhere except the public home page.
+$isApp       = !$isAuth && $user && ($layout ?? '') !== 'site'
+    && (in_array($user['role'], ['admin', 'staff'], true) || $currentPage !== 'home');
+$isCust      = false;
+$isCustPage  = false;
 
 // route => [label, icon]
 $sidebar = [];
@@ -184,11 +185,14 @@ $phone     = setting('salon_phone');
                 </div>
             </details>
         <?php elseif ($user): ?>
-            <a href="<?= e(url(home_for_role($user['role']))) ?>" class="nav-user"><?= icon('user', 'icon icon-sm') ?> Dashboard</a>
+            <a href="<?= e(url(home_for_role($user['role']))) ?>" class="nav-user"><?= icon('user', 'icon icon-sm') ?> <?= $user['role'] === 'customer' ? 'My appointments' : 'Dashboard' ?></a>
             <form method="post" action="<?= e(url('logout')) ?>" class="inline-form">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn btn-ghost btn-small">Log out</button>
             </form>
+            <?php if ($user['role'] === 'customer'): ?>
+                <a href="<?= e(url('customer/book')) ?>" class="btn btn-primary btn-small"><?= icon('calendar', 'icon icon-sm') ?> Book appointment</a>
+            <?php endif; ?>
         <?php else: ?>
             <a href="<?= e(url('login')) ?>" class="nav-user"><?= icon('user', 'icon icon-sm') ?> Log in</a>
             <a href="<?= e(url('register')) ?>" class="btn btn-primary btn-small"><?= icon('calendar', 'icon icon-sm') ?> Book appointment</a>

@@ -155,6 +155,11 @@ function icon(string $name, string $class = 'icon'): string
         'download' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
         'printer'  => '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
         'key'      => '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+        'palette'  => '<circle cx="13.5" cy="6.5" r=".8" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".8" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".8" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".8" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.83-.44-1.12-.29-.29-.44-.65-.44-1.13a1.64 1.64 0 0 1 1.67-1.67h2c3.05 0 5.56-2.5 5.56-5.55C22 6.01 17.46 2 12 2z"/>',
+        'droplet'  => '<path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/>',
+        'waves'    => '<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>',
+        'wind'     => '<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>',
+        'hand'     => '<path d="M18 11V6a2 2 0 0 0-4 0v1"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
         'tiktok'   => '<path d="M16 3c.4 2.3 1.9 3.8 4 4v3.2c-1.5 0-2.9-.4-4-1.2V15a6 6 0 1 1-6-6v3.2A2.8 2.8 0 1 0 12.8 15V3z"/>',
     ];
     return '<svg class="' . e($class) . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
@@ -180,6 +185,97 @@ function service_icon(string $name): string
 function slugify(string $text): string
 {
     return trim(preg_replace('/[^a-z0-9]+/', '-', mb_strtolower($text)) ?? '', '-');
+}
+
+/** Service categories in menu order => icon. Used by the admin, booking and home pages. */
+const SERVICE_CATEGORIES = [
+    'Haircut'               => 'scissors',
+    'Hair Coloring'         => 'palette',
+    'Hair Treatments'       => 'droplet',
+    'Perming & Rebonding'   => 'waves',
+    'Hair Styling & Makeup' => 'wind',
+    'Hair Removal'          => 'sparkle',
+    'Nail Care'             => 'hand',
+];
+
+/** Categories the admin manages separately (haircuts are priced by stylist level). */
+const SEPARATE_CATEGORIES = ['Haircut'];
+
+/** Group service rows by their 'category' column, in menu order (unknown categories go last as "Other"). */
+function group_services(array $services): array
+{
+    $groups = array_fill_keys(array_keys(SERVICE_CATEGORIES), []);
+    foreach ($services as $s) {
+        $cat = isset(SERVICE_CATEGORIES[$s['category'] ?? '']) ? $s['category'] : 'Other';
+        $groups[$cat][] = $s;
+    }
+    // Inside a category: cheapest first (Deluxe before Premium), then by name.
+    foreach ($groups as &$rows) {
+        usort($rows, static fn ($a, $b) => [(float) ($a['price'] ?? 0), $a['name']] <=> [(float) ($b['price'] ?? 0), $b['name']]);
+    }
+    unset($rows);
+    return array_filter($groups);
+}
+
+/** <option>s for a service <select>, grouped in <optgroup>s by category. */
+function service_options(array $services, int $selected = 0, bool $showDuration = false): string
+{
+    $html = '';
+    foreach (group_services($services) as $cat => $rows) {
+        $html .= '<optgroup label="' . e($cat) . '">';
+        foreach ($rows as $s) {
+            $label = $s['name'] . ($showDuration && isset($s['duration_minutes']) ? ' (' . fmt_duration((int) $s['duration_minutes']) . ')' : '');
+            $html .= '<option value="' . e($s['id']) . '"' . ((int) $s['id'] === $selected ? ' selected' : '') . '>' . e($label) . '</option>';
+        }
+        $html .= '</optgroup>';
+    }
+    return $html;
+}
+
+/** <option>s for the category <select> in service forms. */
+function category_options(string $selected = ''): string
+{
+    $html = '<option value="">Choose a category</option>';
+    foreach (array_keys(SERVICE_CATEGORIES) as $cat) {
+        $html .= '<option value="' . e($cat) . '"' . ($cat === $selected ? ' selected' : '') . '>' . e($cat) . '</option>';
+    }
+    return $html;
+}
+
+/** Service checkboxes grouped by category (stylist forms). $checked = selected ids. */
+function service_checkboxes(array $services, array $checked): string
+{
+    $html = '';
+    foreach (group_services($services) as $cat => $rows) {
+        $html .= '<fieldset class="svc-checks"><legend>' . icon(category_icon($cat), 'icon icon-sm') . ' ' . e($cat)
+               . ' <button type="button" class="link-btn" data-check-all>Select all</button></legend><div class="check-grid">';
+        foreach ($rows as $s) {
+            $html .= '<label><input type="checkbox" name="services[]" value="' . e($s['id']) . '"'
+                   . (in_array((int) $s['id'], $checked, true) ? ' checked' : '') . '> ' . e($s['name']) . '</label>';
+        }
+        $html .= '</div></fieldset>';
+    }
+    return $html;
+}
+
+/** Photo for a category: services/<category>.jpg, or an older photo with a similar name. */
+function category_photo(string $category): string
+{
+    $own = 'services/' . slugify($category) . '.jpg';
+    $fallback = [
+        'Hair Coloring'         => 'services/hair-color.jpg',
+        'Hair Treatments'       => 'services/hair-treatment.jpg',
+        'Perming & Rebonding'   => 'services/blow-dry.jpg',
+        'Hair Styling & Makeup' => 'services/makeup.jpg',
+        'Hair Removal'   => 'services/waxing.jpg',
+        'Nail Care'      => 'services/manicure.jpg',
+    ];
+    return !photo_exists($own) && isset($fallback[$category]) && photo_exists($fallback[$category]) ? $fallback[$category] : $own;
+}
+
+function category_icon(string $category): string
+{
+    return SERVICE_CATEGORIES[$category] ?? 'sparkle';
 }
 
 function photo_exists(string $file): bool

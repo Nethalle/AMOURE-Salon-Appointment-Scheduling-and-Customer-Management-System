@@ -1,6 +1,9 @@
 /* AMOURÉ SALON: home page sizes (loaded after style.css) */
 /* Services: 3 per row on desktop, taller photos */
-.service-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.service-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; }
+.service-grid > .service-card { flex: 0 1 calc((100% - 48px) / 3); }
+@media (max-width: 900px) { .service-grid > .service-card { flex-basis: calc((100% - 24px) / 2); } }
+@media (max-width: 560px) { .service-grid > .service-card { flex-basis: 100%; } }
 .service-photo { height: 230px; }
 .service-body { padding: 34px 20px 22px; }
 .service-body h3 { font-size: 24px; }

@@ -40,13 +40,14 @@ INSERT INTO stylists (id, full_name, specialty) VALUES
   (4, 'Stylist Four',  'Blow dry and styling');
 
 -- ---------- services ----------
-INSERT INTO services (id, name, price, duration_minutes) VALUES
-  (1, 'Haircut',          250.00,  45),
-  (2, 'Blow Dry',         200.00,  30),
-  (3, 'Hair Color',      1500.00, 120),
-  (4, 'Hair Treatment',   800.00,  60),
-  (5, 'Manicure',         150.00,  45),
-  (6, 'Pedicure',         200.00,  60);
+INSERT INTO services (id, name, category, price, duration_minutes) VALUES
+  (1, 'Haircut',            'Haircut',         450.00,  45),
+  (2, 'Shampoo & Blow Dry', 'Hair Styling & Makeup', 300.00,  30),
+  (3, 'Root Color - Deluxe','Hair Coloring', 2500.00,  90),
+  (4, 'Loreal Hair Spa',    'Hair Treatments', 2500.00,  60),
+  (5, 'Manicure',           'Nail Care',       250.00,  30),
+  (6, 'Pedicure',           'Nail Care',       280.00,  45);
+-- For the full salon menu (50 services), also import services-update.sql.
 
 -- ---------- which stylist does which service ----------
 INSERT INTO stylist_services (stylist_id, service_id) VALUES

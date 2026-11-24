@@ -46,7 +46,7 @@ final class BookingRules
     public static function bookableServices(): array
     {
         return db()->query(
-            'SELECT s.id, s.name, s.price, s.duration_minutes
+            'SELECT s.id, s.name, s.category, s.price, s.duration_minutes
                FROM services s
               WHERE s.is_active = 1
                 AND EXISTS (SELECT 1 FROM stylist_services ss

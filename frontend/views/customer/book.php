@@ -37,20 +37,38 @@ $steps = [1 => 'Service', 2 => 'Stylist', 3 => 'Date & time', 4 => 'Confirm'];
     <?php if (!$services): ?>
         <div class="card center"><p class="muted">No services are available for booking right now. Please check back soon.</p></div>
     <?php else: ?>
-        <div class="choice-grid">
-            <?php foreach ($services as $s): ?>
-                <a class="choice" href="<?= e(url('customer/book', ['service' => $s['id']])) ?>">
-                    <span class="choice-title"><?= e($s['name']) ?></span>
-                    <span class="choice-meta"><?= e($s['duration_minutes']) ?> min</span>
-                    <span class="choice-price"><?= e(peso($s['price'])) ?></span>
-                </a>
-            <?php endforeach; ?>
+        <?php $groups = group_services($services); ?>
+        <div class="svc-search search-box">
+            <?= icon('search') ?>
+            <input type="search" id="service-search" placeholder="Search services, e.g. rebond, gel, color…" aria-label="Search services" autocomplete="off">
         </div>
+        <nav class="cat-chips" aria-label="Jump to a category">
+            <?php foreach ($groups as $cat => $rows): ?>
+                <a href="#cat-<?= e(slugify($cat)) ?>"><?= icon(category_icon($cat), 'icon icon-sm') ?> <?= e($cat) ?> <span><?= count($rows) ?></span></a>
+            <?php endforeach; ?>
+        </nav>
+        <?php foreach ($groups as $cat => $rows): ?>
+            <section class="cat-section" id="cat-<?= e(slugify($cat)) ?>">
+                <h2 class="cat-title"><span class="kpi-icon"><?= icon(category_icon($cat)) ?></span> <?= e($cat) ?>
+                    <small>from <?= e(peso(min(array_column($rows, 'price')))) ?></small></h2>
+                <div class="choice-list">
+                    <?php foreach ($rows as $s): ?>
+                        <a class="choice-row" data-search="<?= e(mb_strtolower($s['name'] . ' ' . $cat)) ?>" href="<?= e(url('customer/book', ['service' => $s['id']])) ?>">
+                            <span class="choice-row-name"><?= e($s['name']) ?><small><?= icon('clock', 'icon icon-xs') ?> <?= e(fmt_duration((int) $s['duration_minutes'])) ?></small></span>
+                            <span class="choice-row-price"><?= e(peso($s['price'])) ?></span>
+                            <?= icon('chev-right', 'icon icon-sm') ?>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+        <?php endforeach; ?>
+        <p class="empty svc-none" hidden>No service matches "<span></span>". Try another word, like "hair", "nail" or "wax".</p>
+        <p class="hint">Prices are starting prices and may vary with hair length. Your stylist will confirm before starting.</p>
     <?php endif; ?>
 
 <?php elseif ($step === 2): ?>
     <p class="summary-line">
-        <strong><?= e($service['name']) ?></strong> · <?= e($service['duration_minutes']) ?> min · <?= e(peso($service['price'])) ?>
+        <strong><?= e($service['name']) ?></strong> · <?= e(fmt_duration((int) $service['duration_minutes'])) ?> · <?= e(peso($service['price'])) ?>
         <a href="<?= e(url('customer/book')) ?>">Change</a>
     </p>
     <?php if (!$stylists): ?>
