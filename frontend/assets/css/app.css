@@ -809,3 +809,27 @@ html[data-theme="dark"] .layout-app .pill-rose { background: #A85C5E; }
 .app-top .notif { margin-left: 4px; }
 .app-top .notif-panel { left: auto; right: -8px; }
 .app-top .theme-btn + .notif + .app-user { margin-left: 8px; }
+
+/* =============================================================
+   Use the full screen: no empty space on the right or bottom
+   ============================================================= */
+.app-page { max-width: none; flex: 1; display: flex; flex-direction: column; }
+.app-page > .flash-stack { flex: 0 0 auto; }
+.tabbar { overflow-y: hidden; scrollbar-width: none; }
+.tabbar::-webkit-scrollbar { display: none; }
+
+/* Appointments: the list fills the rest of the screen, calendar stays on top. */
+.app-page > .appt-grid { flex: 1; align-items: stretch; }
+.appt-grid > .panel:first-child { display: flex; flex-direction: column; min-height: 0; }
+.appt-grid > .panel:first-child .table-wrap { flex: 1; }
+.appt-grid > .panel:first-child .empty { flex: 1; display: grid; place-items: center; }
+.appt-grid > .panel:first-child .pager { margin-top: auto; }
+.appt-grid > .mini-cal { align-self: start; position: sticky; top: 92px; }
+
+/* Customers / users / reviews lists and dashboard schedule: last panel fills the screen. */
+.app-page > section.panel-flush:last-of-type { flex: 1; display: flex; flex-direction: column; }
+.app-page > section.panel-flush:last-of-type .table-wrap,
+.app-page > section.panel-flush:last-of-type .rev-list { flex: 1; }
+.app-page > section.panel-flush:last-of-type .empty { flex: 1; display: grid; place-items: center; }
+.app-page > section.panel-flush:last-of-type .pager { margin-top: auto; }
+@media (max-width: 1280px) { .appt-grid > .mini-cal { position: static; } }
