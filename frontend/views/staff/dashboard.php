@@ -16,7 +16,7 @@ if ($revYesterday > 0) {
 }
 
 // Bar chart geometry.
-$W = 640; $H = 230; $padL = 30; $padB = 28; $padT = 16;
+$W = 900; $H = 250; $padL = 30; $padB = 28; $padT = 16;
 $max   = max(4, (int) ceil(max($chart) / 4) * 4);
 $n     = count($chart);
 $slot  = ($W - $padL) / $n;
