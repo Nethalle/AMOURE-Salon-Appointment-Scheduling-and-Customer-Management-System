@@ -82,9 +82,9 @@ class ReviewController
     {
         require_role(['admin']);
 
-        $status = (string) ($_GET['status'] ?? 'pending');
+        $status = (string) ($_GET['status'] ?? 'all');
         if (!in_array($status, ['pending', 'approved', 'removed', 'all'], true)) {
-            $status = 'pending';
+            $status = 'all';
         }
 
         $sql = 'SELECT r.id, r.rating, r.comment, r.status, r.created_at,
@@ -104,8 +104,16 @@ class ReviewController
             $counts[$row['status']] = (int) $row['n'];
         }
 
+        // Summary cards (removed reviews are not counted).
+        $stats = db()->query(
+            "SELECT COUNT(*) AS total, AVG(rating) AS avg_rating,
+                    SUM(CASE WHEN rating >= 4 THEN 1 ELSE 0 END) AS positive
+               FROM reviews WHERE status <> 'removed'"
+        )->fetch();
+
         view('admin/reviews', [
             'title'   => 'Reviews',
+            'stats'   => $stats,
             'reviews' => $stmt->fetchAll(),
             'status'  => $status,
             'counts'  => $counts,

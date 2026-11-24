@@ -7,6 +7,9 @@ require_once __DIR__ . '/../services/NotificationService.php';
 
 class SettingsController
 {
+    /** Settings are split into tabs; each tab's form only posts its own fields. */
+    private const TABS = ['bookings', 'salon', 'notifications'];
+
     public function index(): void
     {
         require_role(['admin']);
@@ -30,7 +33,12 @@ class SettingsController
             $values[$key] = setting($key);
         }
 
-        view('admin/settings', ['title' => 'Settings', 'values' => $values, 'logs' => $logs]);
+        $tab = (string) ($_GET['tab'] ?? 'bookings');
+        if (!in_array($tab, self::TABS, true)) {
+            $tab = 'bookings';
+        }
+
+        view('admin/settings', ['title' => 'Settings', 'values' => $values, 'logs' => $logs, 'tab' => $tab]);
     }
 
     /** "Send due reminders now" button: same logic as the scheduled job. */
@@ -44,7 +52,7 @@ class SettingsController
 
         if (setting('reminders_enabled') !== '1') {
             flash('error', 'Reminders are turned off. Turn them on first.');
-            redirect('admin/settings');
+            redirect('admin/settings', ['tab' => 'notifications']);
         }
 
         $result = NotificationService::sendDueReminders();
@@ -54,11 +62,30 @@ class SettingsController
             flash($result['failed'] ? 'error' : 'success',
                 "Reminders sent: {$result['sent']}. Failed: {$result['failed']}." . ($result['failed'] ? ' See the email log below.' : ''));
         }
-        redirect('admin/settings');
+        redirect('admin/settings', ['tab' => 'notifications']);
     }
 
     private function save(array $in): void
     {
+        $tab = in_array($in['tab'] ?? '', self::TABS, true) ? $in['tab'] : 'bookings';
+
+        // Fields not on this tab keep their current value.
+        foreach (array_keys(SETTING_DEFAULTS) as $key) {
+            if (!array_key_exists($key, $in) && !in_array($key, ['booking_emails_enabled', 'reminders_enabled'], true)) {
+                $in[$key] = setting($key);
+            }
+        }
+        // Checkboxes: unticked boxes send nothing, so only read them on the tab that shows them.
+        if ($tab !== 'notifications') {
+            foreach (['booking_emails_enabled', 'reminders_enabled'] as $key) {
+                if (setting($key) === '1') {
+                    $in[$key] = '1';
+                } else {
+                    unset($in[$key]);
+                }
+            }
+        }
+
         $v = [
             'daily_appointment_limit' => trim((string) ($in['daily_appointment_limit'] ?? '')),
             'opening_time'            => trim((string) ($in['opening_time'] ?? '')),
@@ -116,7 +143,7 @@ class SettingsController
             foreach ($errors as $error) {
                 flash('error', $error);
             }
-            redirect('admin/settings');
+            redirect('admin/settings', ['tab' => $tab]);
         }
 
         $pdo    = db();
@@ -132,6 +159,6 @@ class SettingsController
         $pdo->commit();
 
         flash('success', 'Settings saved.');
-        redirect('admin/settings');
+        redirect('admin/settings', ['tab' => $tab]);
     }
 }

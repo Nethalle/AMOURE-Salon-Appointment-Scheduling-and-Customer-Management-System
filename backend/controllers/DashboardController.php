@@ -8,7 +8,7 @@ class DashboardController
     public function admin(): void
     {
         $user = require_role(['admin']);
-        $this->show($user, 'Admin dashboard');
+        $this->show($user, 'Dashboard');
     }
 
     public function staff(): void
@@ -45,14 +45,55 @@ class DashboardController
               ORDER BY a.start_time"
         );
         $stmt->execute(['d' => $today]);
+        $schedule = $stmt->fetchAll();
+
+        // Revenue from completed appointments: today vs yesterday.
+        $revenue = db()->prepare(
+            "SELECT COALESCE(SUM(s.price), 0) FROM appointments a JOIN services s ON s.id = a.service_id
+              WHERE a.appt_date = :d AND a.status = 'completed'"
+        );
+        $revenue->execute(['d' => $today]);
+        $revToday = (float) $revenue->fetchColumn();
+        $revenue->execute(['d' => date('Y-m-d', strtotime('-1 day'))]);
+        $revYesterday = (float) $revenue->fetchColumn();
+
+        // Expected revenue still to come today (confirmed bookings).
+        $stmt = db()->prepare(
+            "SELECT COALESCE(SUM(s.price), 0) FROM appointments a JOIN services s ON s.id = a.service_id
+              WHERE a.appt_date = :d AND a.status = 'confirmed'"
+        );
+        $stmt->execute(['d' => $today]);
+        $revExpected = (float) $stmt->fetchColumn();
+
+        // Bookings per day for the last 14 days (cancelled / no-show not counted).
+        $start = date('Y-m-d', strtotime('-13 days'));
+        $stmt = db()->prepare(
+            "SELECT appt_date, COUNT(*) AS n FROM appointments
+              WHERE appt_date BETWEEN :a AND :b AND status IN ('pending','confirmed','completed')
+              GROUP BY appt_date"
+        );
+        $stmt->execute(['a' => $start, 'b' => $today]);
+        $perDay = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $perDay[$row['appt_date']] = (int) $row['n'];
+        }
+        $chart = [];
+        for ($i = 13; $i >= 0; $i--) {
+            $d = date('Y-m-d', strtotime("-{$i} days"));
+            $chart[$d] = $perDay[$d] ?? 0;
+        }
 
         view('staff/dashboard', [
             'title'           => $title,
             'user'            => $user,
             'counts'          => $counts,
             'pendingRequests' => $pendingRequests,
-            'schedule'        => $stmt->fetchAll(),
+            'schedule'        => $schedule,
             'dailyLimit'      => (int) setting('daily_appointment_limit'),
+            'revToday'        => $revToday,
+            'revYesterday'    => $revYesterday,
+            'revExpected'     => $revExpected,
+            'chart'           => $chart,
         ]);
     }
 }

@@ -63,8 +63,14 @@ class UserController
         );
         $stmt->execute($params);
 
+        $roleCounts = ['admin' => 0, 'staff' => 0, 'customer' => 0];
+        foreach (db()->query('SELECT role, COUNT(*) AS n FROM users GROUP BY role')->fetchAll() as $row) {
+            $roleCounts[$row['role']] = (int) $row['n'];
+        }
+
         view('admin/users', [
             'title'  => 'User accounts',
+            'roleCounts' => $roleCounts,
             'users'  => $stmt->fetchAll(),
             'role'   => $role,
             'me'     => current_user(),

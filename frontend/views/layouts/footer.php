@@ -1,9 +1,13 @@
 <?php /** @var bool $isApp */ /** @var bool $isAuth */ ?>
-</main>
-
 <?php if ($isApp): ?>
-</div><!-- /.shell -->
-<?php elseif (!$isAuth):
+        </main>
+    </div><!-- /.app-main -->
+</div><!-- /.app -->
+<?php else: ?>
+</main>
+<?php endif; ?>
+
+<?php if (!$isApp && !$isAuth):
     try {
         $footerServices = db()->query('SELECT name FROM services WHERE is_active = 1 ORDER BY name LIMIT 6')->fetchAll();
     } catch (Throwable $e) {

@@ -102,7 +102,24 @@ class ReportController
         $stmt->execute($range);
         $rating = $stmt->fetch();
 
+        // Revenue per day / month (completed appointments × current price).
+        $stmt = db()->prepare(
+            "SELECT a.appt_date, SUM(s.price) AS amount
+               FROM appointments a JOIN services s ON s.id = a.service_id
+              WHERE a.appt_date BETWEEN :from AND :to AND a.status = 'completed'
+              GROUP BY a.appt_date"
+        );
+        $stmt->execute($range);
+        $revenueSeries = $this->buildSeries($from, $to, array_column($stmt->fetchAll(), 'amount', 'appt_date'), true);
+
+        // New customer profiles created in the period.
+        $stmt = db()->prepare('SELECT COUNT(*) FROM customers WHERE created_at BETWEEN :from AND :to');
+        $stmt->execute(['from' => $from . ' 00:00:00', 'to' => $to . ' 23:59:59']);
+        $newCustomers = (int) $stmt->fetchColumn();
+
         view('admin/reports', [
+            'revenueSeries' => $revenueSeries,
+            'newCustomers'  => $newCustomers,
             'title'    => 'Reports',
             'from'     => $from,
             'to'       => $to,
@@ -194,7 +211,7 @@ class ReportController
     }
 
     /** One bar per day, or per month when the range is longer than about 2 months. */
-    private function buildSeries(string $from, string $to, array $perDate): array
+    private function buildSeries(string $from, string $to, array $perDate, bool $money = false): array
     {
         $byMonth = (strtotime($to) - strtotime($from)) > 62 * 86400;
         $series  = [];
@@ -206,12 +223,12 @@ class ReportController
                 $cursor = strtotime('+1 month', $cursor);
             }
             foreach ($perDate as $date => $n) {
-                $series[substr($date, 0, 7)]['value'] += (int) $n;
+                $series[substr($date, 0, 7)]['value'] += $money ? (float) $n : (int) $n;
             }
         } else {
             for ($d = strtotime($from); $d <= strtotime($to); $d = strtotime('+1 day', $d)) {
                 $key = date('Y-m-d', $d);
-                $series[$key] = ['label' => fmt_date($key), 'short' => date('j', $d), 'value' => (int) ($perDate[$key] ?? 0)];
+                $series[$key] = ['label' => fmt_date($key), 'short' => date('j', $d), 'value' => $money ? (float) ($perDate[$key] ?? 0) : (int) ($perDate[$key] ?? 0)];
             }
         }
 

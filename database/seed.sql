@@ -36,7 +36,8 @@ INSERT INTO customers (id, user_id, full_name, phone, email, notes) VALUES
 INSERT INTO stylists (id, full_name, specialty) VALUES
   (1, 'Stylist One',   'Haircut and styling'),
   (2, 'Stylist Two',   'Hair color and treatment'),
-  (3, 'Stylist Three', 'Nails');
+  (3, 'Stylist Three', 'Nails'),
+  (4, 'Stylist Four',  'Blow dry and styling');
 
 -- ---------- services ----------
 INSERT INTO services (id, name, price, duration_minutes) VALUES
@@ -51,7 +52,8 @@ INSERT INTO services (id, name, price, duration_minutes) VALUES
 INSERT INTO stylist_services (stylist_id, service_id) VALUES
   (1, 1), (1, 2),
   (2, 2), (2, 3), (2, 4),
-  (3, 5), (3, 6);
+  (3, 5), (3, 6),
+  (4, 2), (4, 4);
 
 -- ---------- sample appointments (dates relative to the import day) ----------
 INSERT INTO appointments

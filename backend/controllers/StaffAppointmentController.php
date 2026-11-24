@@ -16,38 +16,45 @@ class StaffAppointmentController
         'no_show'  => [['confirmed'],            'no_show'],
     ];
 
-    /** List appointments with filters. */
+    /** Tabs on the appointments page: key => [label, statuses]. */
+    private const TABS = [
+        'all'       => ['All', []],
+        'today'     => ['Today', []],
+        'pending'   => ['Pending', ['pending']],
+        'confirmed' => ['Confirmed', ['confirmed']],
+        'completed' => ['Completed', ['completed']],
+        'cancelled' => ['Cancelled', ['cancelled', 'no_show']],
+    ];
+
+    private const PER_PAGE = 10;
+
+    /** List appointments: tabs, filters, pagination and a month calendar. */
     public function index(): void
     {
         require_role(['admin', 'staff']);
 
+        $today = date('Y-m-d');
         $f = [
-            'from'    => (string) ($_GET['from'] ?? date('Y-m-d')),
-            'to'      => (string) ($_GET['to'] ?? ''),
-            'status'  => (string) ($_GET['status'] ?? ''),
+            'tab'     => (string) ($_GET['tab'] ?? 'all'),
+            'date'    => (string) ($_GET['date'] ?? ''),
+            'service' => (int) ($_GET['service'] ?? 0),
             'stylist' => (int) ($_GET['stylist'] ?? 0),
             'q'       => trim((string) ($_GET['q'] ?? '')),
+            'p'       => max(1, (int) ($_GET['p'] ?? 1)),
         ];
+        if (!isset(self::TABS[$f['tab']])) {
+            $f['tab'] = 'all';
+        }
+        if (!BookingRules::isValidDate($f['date'])) {
+            $f['date'] = '';
+        }
 
+        // Filters shared by every tab (date, service, stylist, search).
         $where  = [];
         $params = [];
-        if (BookingRules::isValidDate($f['from'])) {
-            $where[] = 'a.appt_date >= :from';
-            $params['from'] = $f['from'];
-        } else {
-            $f['from'] = '';
-        }
-        if (BookingRules::isValidDate($f['to'])) {
-            $where[] = 'a.appt_date <= :to';
-            $params['to'] = $f['to'];
-        } else {
-            $f['to'] = '';
-        }
-        if (in_array($f['status'], ['pending', 'confirmed', 'completed', 'cancelled', 'no_show'], true)) {
-            $where[] = 'a.status = :status';
-            $params['status'] = $f['status'];
-        } else {
-            $f['status'] = '';
+        if ($f['service'] > 0) {
+            $where[] = 'a.service_id = :service';
+            $params['service'] = $f['service'];
         }
         if ($f['stylist'] > 0) {
             $where[] = 'a.stylist_id = :stylist';
@@ -58,20 +65,78 @@ class StaffAppointmentController
             $like = '%' . $f['q'] . '%';
             $params += ['q1' => $like, 'q2' => $like, 'q3' => $like];
         }
-
-        $sql = 'SELECT a.id, a.appt_date, a.start_time, a.end_time, a.status, a.source,
-                       c.id AS customer_id, c.full_name AS customer, c.phone, c.email,
-                       s.name AS service, st.full_name AS stylist
-                  FROM appointments a
+        $from = ' FROM appointments a
                   JOIN customers c  ON c.id  = a.customer_id
                   JOIN services  s  ON s.id  = a.service_id
-                  JOIN stylists  st ON st.id = a.stylist_id'
-             . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
-             . ' ORDER BY a.appt_date, a.start_time
-                 LIMIT 300';
+                  JOIN stylists  st ON st.id = a.stylist_id';
 
-        $stmt = db()->prepare($sql);
-        $stmt->execute($params);
+        // Tab counts (with the date filter, but before the tab's own status filter).
+        $countWhere  = $where;
+        $countParams = $params;
+        if ($f['date'] !== '') {
+            $countWhere[] = 'a.appt_date = :date';
+            $countParams['date'] = $f['date'];
+        }
+        $stmt = db()->prepare('SELECT a.status, COUNT(*) AS n' . $from
+            . ($countWhere ? ' WHERE ' . implode(' AND ', $countWhere) : '') . ' GROUP BY a.status');
+        $stmt->execute($countParams);
+        $byStatus = array_fill_keys(['pending', 'confirmed', 'completed', 'cancelled', 'no_show'], 0);
+        foreach ($stmt->fetchAll() as $row) {
+            $byStatus[$row['status']] = (int) $row['n'];
+        }
+        $todayWhere = $where;
+        $todayWhere[] = 'a.appt_date = :today';
+        $stmt = db()->prepare('SELECT COUNT(*)' . $from . ' WHERE ' . implode(' AND ', $todayWhere));
+        $stmt->execute($params + ['today' => $today]);
+
+        $counts = [
+            'all'       => array_sum($byStatus),
+            'today'     => (int) $stmt->fetchColumn(),
+            'pending'   => $byStatus['pending'],
+            'confirmed' => $byStatus['confirmed'],
+            'completed' => $byStatus['completed'],
+            'cancelled' => $byStatus['cancelled'] + $byStatus['no_show'],
+        ];
+
+        // The list itself.
+        $listWhere  = $where;
+        $listParams = $params;
+        $day = $f['tab'] === 'today' ? $today : $f['date'];
+        if ($day !== '') {
+            $listWhere[] = 'a.appt_date = :day';
+            $listParams['day'] = $day;
+        }
+        $statuses = self::TABS[$f['tab']][1];
+        if ($statuses) {
+            $in = [];
+            foreach ($statuses as $i => $st) {
+                $in[] = ':st' . $i;
+                $listParams['st' . $i] = $st;
+            }
+            $listWhere[] = 'a.status IN (' . implode(',', $in) . ')';
+        }
+        $whereSql = $listWhere ? ' WHERE ' . implode(' AND ', $listWhere) : '';
+
+        $stmt = db()->prepare('SELECT COUNT(*)' . $from . $whereSql);
+        $stmt->execute($listParams);
+        $total = (int) $stmt->fetchColumn();
+        $pages = max(1, (int) ceil($total / self::PER_PAGE));
+        $f['p'] = min($f['p'], $pages);
+
+        // Work still to do (pending/confirmed) is listed soonest first; history newest first.
+        $order = in_array($f['tab'], ['pending', 'confirmed', 'today'], true) || $day !== ''
+            ? 'a.appt_date ASC, a.start_time ASC'
+            : 'a.appt_date DESC, a.start_time ASC';
+
+        $stmt = db()->prepare(
+            'SELECT a.id, a.appt_date, a.start_time, a.end_time, a.status, a.source,
+                    c.id AS customer_id, c.full_name AS customer, c.phone, c.email,
+                    s.name AS service, st.full_name AS stylist'
+            . $from . $whereSql
+            . ' ORDER BY ' . $order
+            . ' LIMIT ' . self::PER_PAGE . ' OFFSET ' . (($f['p'] - 1) * self::PER_PAGE)
+        );
+        $stmt->execute($listParams);
 
         $now = time();
         $appointments = array_map(function (array $a) use ($now) {
@@ -81,12 +146,36 @@ class StaffAppointmentController
             return $a;
         }, $stmt->fetchAll());
 
+        // Month calendar: ?m=2026-11 (defaults to the selected day's month).
+        $m = (string) ($_GET['m'] ?? '');
+        if (!preg_match('/^\d{4}-\d{2}$/', $m)) {
+            $m = substr($day !== '' ? $day : $today, 0, 7);
+        }
+        $first = $m . '-01';
+        $stmt = db()->prepare(
+            "SELECT DISTINCT appt_date FROM appointments
+              WHERE appt_date BETWEEN :a AND :b AND status IN ('pending','confirmed','completed')"
+        );
+        $stmt->execute(['a' => $first, 'b' => date('Y-m-t', strtotime($first))]);
+        $busyDays = array_flip($stmt->fetchAll(PDO::FETCH_COLUMN));
+
         view('staff/appointments', [
             'title'        => 'Appointments',
             'appointments' => $appointments,
             'filters'      => $f,
+            'tabs'         => array_map(fn ($t) => $t[0], self::TABS),
+            'counts'       => $counts,
+            'total'        => $total,
+            'pages'        => $pages,
+            'perPage'      => self::PER_PAGE,
+            'month'        => $m,
+            'busyDays'     => $busyDays,
+            'services'     => db()->query('SELECT id, name FROM services ORDER BY name')->fetchAll(),
             'stylists'     => db()->query('SELECT id, full_name FROM stylists ORDER BY full_name')->fetchAll(),
-            'back'         => $_SERVER['QUERY_STRING'] ?? '',
+            'back'         => http_build_query(array_filter([
+                'tab' => $f['tab'], 'date' => $f['date'], 'service' => $f['service'] ?: null,
+                'stylist' => $f['stylist'] ?: null, 'q' => $f['q'], 'p' => $f['p'] > 1 ? $f['p'] : null, 'm' => $_GET['m'] ?? null,
+            ], fn ($v) => $v !== null && $v !== '')),
         ]);
     }
 
@@ -293,7 +382,7 @@ class StaffAppointmentController
         $query = (string) ($_POST['back'] ?? '');
         parse_str($query, $params);
         unset($params['page']);
-        redirect('staff/appointments', array_intersect_key($params, array_flip(['from', 'to', 'status', 'stylist', 'q'])));
+        redirect('staff/appointments', array_intersect_key($params, array_flip(['tab', 'date', 'service', 'stylist', 'q', 'p', 'm'])));
     }
 
     /** Validate service / stylist / date choices and load free slots. */

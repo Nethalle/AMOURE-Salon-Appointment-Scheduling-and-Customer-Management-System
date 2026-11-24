@@ -59,3 +59,68 @@ document.querySelectorAll('select[data-filters]').forEach(function (serviceSelec
     serviceSelect.addEventListener('change', update);
     update();
 });
+
+// Dialogs: <button data-dialog="add-service"> opens <dialog id="add-service">.
+document.addEventListener('click', function (event) {
+    var opener = event.target.closest('[data-dialog]');
+    if (opener) {
+        var dlg = document.getElementById(opener.getAttribute('data-dialog'));
+        if (dlg && dlg.showModal) {
+            event.preventDefault();
+            dlg.showModal();
+        }
+        return;
+    }
+    var closer = event.target.closest('[data-close]');
+    if (closer) {
+        var parent = closer.closest('dialog');
+        if (parent) {
+            parent.close();
+        }
+    }
+});
+// Re-open a dialog after a failed save (it has data-open set by the server).
+document.querySelectorAll('dialog[data-open]').forEach(function (dlg) {
+    if (dlg.showModal) {
+        dlg.showModal();
+    }
+});
+// Click on the dark backdrop closes the dialog.
+document.querySelectorAll('dialog.modal').forEach(function (dlg) {
+    dlg.addEventListener('click', function (event) {
+        if (event.target === dlg) {
+            dlg.close();
+        }
+    });
+});
+
+// "⋯" menus and the user menu: only one open at a time; click outside closes.
+document.addEventListener('click', function (event) {
+    document.querySelectorAll('details.dots[open], details.app-user[open]').forEach(function (d) {
+        if (!d.contains(event.target)) {
+            d.removeAttribute('open');
+        }
+    });
+});
+
+// Filters: change a select/date inside form[data-autosubmit] => submit.
+document.querySelectorAll('form[data-autosubmit]').forEach(function (form) {
+    form.querySelectorAll('select, input[type="date"]').forEach(function (el) {
+        el.addEventListener('change', function () {
+            form.submit();
+        });
+    });
+});
+
+// Mobile: hamburger opens the sidebar.
+document.querySelectorAll('[data-toggle-side]').forEach(function (btn) {
+    btn.addEventListener('click', function (event) {
+        event.stopPropagation();
+        document.body.classList.toggle('side-open');
+    });
+});
+document.addEventListener('click', function (event) {
+    if (document.body.classList.contains('side-open') && !event.target.closest('.app-side')) {
+        document.body.classList.remove('side-open');
+    }
+});
