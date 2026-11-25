@@ -105,9 +105,10 @@ class AppointmentController
         if (!isset($days[$date])) {
             $date = array_key_first(array_filter($days, static fn ($d) => !$d['full'])) ?? '';
         }
-        $slots = ($date !== '' && !$days[$date]['full'])
-            ? BookingRules::availableSlots($stylistId, $date, (int) $service['duration_minutes'])
+        $grid = ($date !== '' && !$days[$date]['full'])
+            ? BookingRules::slotGrid($stylistId, $date, (int) $service['duration_minutes'])
             : [];
+        $slots = array_column(array_filter($grid, static fn ($s) => $s['state'] === 'open'), 'time');
 
         if ($time === '' || !in_array($time, $slots, true)) {
             view('customer/book', [
@@ -118,6 +119,7 @@ class AppointmentController
                 'days'    => $days,
                 'date'    => $date,
                 'slots'   => $slots,
+                'grid'    => $grid,
             ]);
             return;
         }

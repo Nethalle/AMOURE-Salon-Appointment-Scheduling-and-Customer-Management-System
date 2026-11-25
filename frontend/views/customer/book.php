@@ -9,6 +9,7 @@
 /** @var array $days */
 /** @var string $date */
 /** @var array $slots */
+/** @var array $grid */
 /** @var string $time */
 /** @var string $endTime */
 $steps = [1 => 'Service', 2 => 'Stylist', 3 => 'Date & time', 4 => 'Confirm'];
@@ -114,16 +115,32 @@ $steps = [1 => 'Service', 2 => 'Stylist', 3 => 'Date & time', 4 => 'Confirm'];
         </div>
 
         <h2 class="section-title slots-title">
-            Available times<?= $date !== '' ? ' on ' . e(fmt_date($date)) : '' ?>
+            Times<?= $date !== '' ? ' on ' . e(fmt_date($date)) : '' ?>
         </h2>
-        <?php if (!$slots): ?>
-            <p class="muted">No free times on this day. Please pick another date.</p>
+        <?php if (!$grid): ?>
+            <p class="muted">No times left on this day. Please pick another date.</p>
         <?php else: ?>
+            <?php if (!$slots): ?>
+                <p class="muted"><?= e($stylist['full_name']) ?> is fully booked on this day. Pick another date or stylist.</p>
+            <?php endif; ?>
+            <div class="slot-legend">
+                <span><i class="sl-open"></i> Available</span>
+                <span><i class="sl-booked"></i> Booked</span>
+                <span><i class="sl-noroom"></i> Not enough time before the next booking</span>
+            </div>
             <div class="slot-grid">
-                <?php foreach ($slots as $slot): ?>
-                    <a class="slot" href="<?= e(url('customer/book', ['service' => $service['id'], 'stylist' => $stylist['id'], 'date' => $date, 'time' => $slot])) ?>">
-                        <?= e(fmt_time($slot)) ?>
-                    </a>
+                <?php foreach ($grid as $s): ?>
+                    <?php if ($s['state'] === 'open'): ?>
+                        <a class="slot" href="<?= e(url('customer/book', ['service' => $service['id'], 'stylist' => $stylist['id'], 'date' => $date, 'time' => $s['time']])) ?>">
+                            <?= e(fmt_time($s['time'])) ?>
+                        </a>
+                    <?php else: ?>
+                        <span class="slot slot-<?= $s['state'] === 'booked' ? 'booked' : 'noroom' ?>" aria-disabled="true"
+                              title="<?= $s['state'] === 'booked' ? 'Already booked' : 'Not enough time before the next booking' ?>">
+                            <?= e(fmt_time($s['time'])) ?>
+                            <small><?= $s['state'] === 'booked' ? 'Booked' : 'No room' ?></small>
+                        </span>
+                    <?php endif; ?>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
