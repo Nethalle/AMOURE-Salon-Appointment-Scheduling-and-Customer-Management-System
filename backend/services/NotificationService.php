@@ -25,10 +25,19 @@ final class NotificationService
     /** Reminder for one appointment. Marks reminder_sent_at only when the email was sent. */
     public static function reminder(int $appointmentId): string
     {
+        // Claim the reminder first: only one run can change NULL to a time, so two runs
+        // at the same moment (the hourly job + the Settings button) never both send it.
+        $claim = db()->prepare('UPDATE appointments SET reminder_sent_at = :now WHERE id = :id AND reminder_sent_at IS NULL');
+        $claim->execute(['now' => date('Y-m-d H:i:s'), 'id' => $appointmentId]);
+        if ($claim->rowCount() !== 1) {
+            return 'skipped'; // another run already took it
+        }
+
         $result = self::send($appointmentId, 'reminder');
-        if ($result === 'sent') {
-            db()->prepare('UPDATE appointments SET reminder_sent_at = :now WHERE id = :id')
-                ->execute(['now' => date('Y-m-d H:i:s'), 'id' => $appointmentId]);
+        if ($result !== 'sent') {
+            // Not sent (failed, or no email): release it so the next run can try again.
+            db()->prepare('UPDATE appointments SET reminder_sent_at = NULL WHERE id = :id')
+                ->execute(['id' => $appointmentId]);
         }
         return $result;
     }

@@ -17,6 +17,12 @@ class AuthController
             $email    = trim((string) ($_POST['email'] ?? ''));
             $password = (string) ($_POST['password'] ?? '');
 
+            if ($wait = $this->lockedMinutes($email)) {
+                remember_old(['email' => $email]);
+                flash('error', "Too many wrong passwords. Please wait $wait minute" . ($wait === 1 ? '' : 's') . ' and try again.');
+                redirect('login');
+            }
+
             $stmt = db()->prepare(
                 'SELECT id, name, password_hash, role, is_active FROM users WHERE email = :email LIMIT 1'
             );
@@ -51,6 +57,43 @@ class AuthController
         }
 
         view('public/login', ['title' => 'Log in', 'layout' => 'auth']);
+    }
+
+    private const MAX_FAILED_PER_EMAIL = 5;   // wrong passwords for one account
+    private const MAX_FAILED_PER_IP    = 20;  // wrong passwords from one computer/network (any accounts)
+    private const LOCK_MINUTES         = 15;
+
+    /**
+     * Brute-force protection: after 5 wrong passwords for the same email (or 20 from the same
+     * IP address) within 15 minutes, logging in is paused. Uses the activity log's
+     * "login_failed" entries, so it needs no extra table. Returns minutes left (0 = allowed).
+     */
+    private function lockedMinutes(string $email): int
+    {
+        try {
+            $since = date('Y-m-d H:i:s', time() - self::LOCK_MINUTES * 60);
+            $wait  = 0;
+            foreach ([
+                ['details = :v', 'Failed login attempt for ' . $email . '.', self::MAX_FAILED_PER_EMAIL],
+                ['ip_address = :v', substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45), self::MAX_FAILED_PER_IP],
+            ] as [$where, $value, $max]) {
+                $stmt = db()->prepare(
+                    "SELECT created_at FROM activity_logs
+                      WHERE action = 'login_failed' AND created_at >= :since AND $where
+                      ORDER BY created_at DESC LIMIT $max"
+                );
+                $stmt->execute(['since' => $since, 'v' => $value]);
+                $times = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                if (count($times) >= $max) {
+                    // Unlocks 15 minutes after the oldest of the last $max failures.
+                    $unlock = strtotime((string) end($times)) + self::LOCK_MINUTES * 60;
+                    $wait = max($wait, (int) ceil(($unlock - time()) / 60));
+                }
+            }
+            return max(0, $wait);
+        } catch (Throwable $e) {
+            return 0; // activity log not set up yet: don't block anyone
+        }
     }
 
     public function register(): void
