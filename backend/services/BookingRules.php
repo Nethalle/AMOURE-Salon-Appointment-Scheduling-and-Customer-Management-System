@@ -110,7 +110,26 @@ final class BookingRules
      * Free start times for a stylist on a date, e.g. ['09:00', '09:30', ...].
      * Skips times in the past, times that would run past closing, and times that overlap a booking.
      */
+    /** Free start times only (used where only bookable times matter). */
     public static function availableSlots(int $stylistId, string $date, int $duration, int $exceptId = 0): array
+    {
+        $open = [];
+        foreach (self::slotGrid($stylistId, $date, $duration, $exceptId) as $slot) {
+            if ($slot['state'] === 'open') {
+                $open[] = $slot['time'];
+            }
+        }
+        return $open;
+    }
+
+    /**
+     * Every start time of the day for this stylist, so people can see why a time can't be picked.
+     * state: open    = can be booked
+     *        booked  = someone already has the stylist at this time
+     *        no_room = free, but the service would run into the next booking
+     * Times already past (today) are left out. Returns [['time' => 'H:i', 'state' => ...], ...]
+     */
+    public static function slotGrid(int $stylistId, string $date, int $duration, int $exceptId = 0): array
     {
         if (!self::isValidDate($date) || $date < date('Y-m-d')) {
             return [];
@@ -127,24 +146,29 @@ final class BookingRules
             $stmt->fetchAll()
         );
 
-        $open     = strtotime("$date " . setting('opening_time'));
-        $close    = strtotime("$date " . setting('closing_time'));
-        $step     = max(5, (int) setting('slot_interval_minutes')) * 60;
-        $length   = $duration * 60;
-        $now      = time();
+        $open   = strtotime("$date " . setting('opening_time'));
+        $close  = strtotime("$date " . setting('closing_time'));
+        $step   = max(5, (int) setting('slot_interval_minutes')) * 60;
+        $length = $duration * 60;
+        $now    = time();
 
         $slots = [];
         for ($start = $open; $start + $length <= $close; $start += $step) {
-            $end = $start + $length;
             if ($start <= $now) {
                 continue;
             }
+            $end   = $start + $length;
+            $state = 'open';
             foreach ($booked as [$bStart, $bEnd]) {
+                if ($start >= $bStart && $start < $bEnd) {
+                    $state = 'booked';      // the start time itself is taken
+                    break;
+                }
                 if ($start < $bEnd && $end > $bStart) {
-                    continue 2;
+                    $state = 'no_room';     // starts free but overlaps a later booking
                 }
             }
-            $slots[] = date('H:i', $start);
+            $slots[] = ['time' => date('H:i', $start), 'state' => $state];
         }
         return $slots;
     }

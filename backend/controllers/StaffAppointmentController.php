@@ -398,6 +398,7 @@ class StaffAppointmentController
             'service'    => null,
             'stylist'    => null,
             'slots'      => [],
+            'grid'       => [],
             'full'       => false,
             'problem'    => '',
         ];
@@ -423,7 +424,8 @@ class StaffAppointmentController
             $pick['full'] = true;
             return $pick;
         }
-        $pick['slots'] = BookingRules::availableSlots($stylistId, $pick['date'], (int) $pick['service']['duration_minutes'], $exceptId);
+        $pick['grid']  = BookingRules::slotGrid($stylistId, $pick['date'], (int) $pick['service']['duration_minutes'], $exceptId);
+        $pick['slots'] = array_column(array_filter($pick['grid'], static fn ($s) => $s['state'] === 'open'), 'time');
         return $pick;
     }
 
