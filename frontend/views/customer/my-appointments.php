@@ -28,7 +28,7 @@
                     </thead>
                     <tbody>
                     <?php foreach ($upcoming as $a): ?>
-                        <tr>
+                        <tr id="appt-<?= e($a['id']) ?>" class="<?= (int) ($_GET['appt'] ?? 0) === (int) $a['id'] ? 'row-focus' : '' ?>">
                             <td><span class="ref"><?= e(appt_ref($a['id'])) ?></span></td>
                             <td><?= e(fmt_date($a['appt_date'])) ?></td>
                             <td><?= e(fmt_time($a['start_time'])) ?> – <?= e(fmt_time($a['end_time'])) ?></td>
@@ -73,7 +73,7 @@
                     </thead>
                     <tbody>
                     <?php foreach ($past as $a): ?>
-                        <tr>
+                        <tr id="appt-<?= e($a['id']) ?>" class="<?= (int) ($_GET['appt'] ?? 0) === (int) $a['id'] ? 'row-focus' : '' ?>">
                             <td><span class="ref"><?= e(appt_ref($a['id'])) ?></span></td>
                             <td><?= e(fmt_date($a['appt_date'])) ?></td>
                             <td><?= e(fmt_time($a['start_time'])) ?></td>
@@ -99,3 +99,12 @@
         <?php endif; ?>
     </section>
 </div>
+
+<?php if (!empty($_GET['appt'])): ?>
+<script>
+    (function () {
+        var row = document.getElementById('appt-<?= (int) $_GET['appt'] ?>');
+        if (row) { row.scrollIntoView({ block: 'center' }); }
+    })();
+</script>
+<?php endif; ?>
