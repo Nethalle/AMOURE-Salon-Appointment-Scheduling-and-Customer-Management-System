@@ -223,3 +223,18 @@ document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
         try { localStorage.setItem('amoure-theme', next); } catch (e) { /* private mode: just this page */ }
     });
 });
+
+// Stylist photo: show the chosen picture right away, before saving.
+document.querySelectorAll('[data-photo-input]').forEach(function (input) {
+    input.addEventListener('change', function () {
+        var box = input.closest('.photo-field').querySelector('[data-photo-preview]');
+        if (!box || !input.files || !input.files[0]) {
+            return;
+        }
+        var img = document.createElement('img');
+        img.alt = '';
+        img.src = URL.createObjectURL(input.files[0]);
+        box.innerHTML = '';
+        box.appendChild(img);
+    });
+});

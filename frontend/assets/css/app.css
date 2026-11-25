@@ -869,3 +869,16 @@ td > .ref:only-child { font-size: 12.5px; }
 .slot-legend .sl-noroom { background: repeating-linear-gradient(135deg, #F7F1F0 0 3px, #FFFFFF 3px 6px); border-color: #E8DCD9; }
 html[data-theme="dark"] .slot-booked, html[data-theme="dark"] .slot-legend .sl-booked { background: #3B1F1F; border-color: #5C2D2D !important; color: #F2A9A3; }
 html[data-theme="dark"] .slot-noroom, html[data-theme="dark"] .slot-legend .sl-noroom { background: repeating-linear-gradient(135deg, #2A2023 0 6px, #211A1C 6px 12px); border-color: #3A2E31 !important; color: #8C7A77; }
+
+/* Stylist photo upload + initials fallback */
+.photo-pick { display: flex; align-items: center; gap: 16px; }
+.photo-preview { position: relative; flex-shrink: 0; width: 76px; height: 76px; border-radius: 50%; overflow: hidden; background: var(--app-rose-soft); color: var(--app-rose); display: grid; place-items: center; }
+.photo-preview img, .photo-preview .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 0; margin: 0; }
+.photo-preview .icon { width: 26px; height: 26px; }
+.photo-pick input[type="file"] { height: auto !important; padding: 8px !important; width: 100%; }
+.check-inline { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; font-size: 13.5px; font-weight: 500; }
+.photo-initials { display: grid; place-items: center; background: var(--app-rose-soft, #F3E1DC); color: var(--app-rose, #A85C5E); }
+.photo-initials span { font: 700 34px 'Playfair Display', 'Cormorant Garamond', serif; }
+.avatar-photo { position: relative; overflow: hidden; padding: 0 !important; }
+.avatar-photo .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+.avatar-photo .photo-initials span { font-size: 22px; }

@@ -78,7 +78,7 @@ $steps = [1 => 'Service', 2 => 'Stylist', 3 => 'Date & time', 4 => 'Confirm'];
         <div class="choice-grid">
             <?php foreach ($stylists as $st): ?>
                 <a class="choice choice-person" href="<?= e(url('customer/book', ['service' => $service['id'], 'stylist' => $st['id']])) ?>">
-                    <span class="avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr($st['full_name'], 0, 1))) ?></span>
+                    <span class="avatar avatar-photo" aria-hidden="true"><?= stylist_photo($st) ?></span>
                     <span class="choice-title"><?= e($st['full_name']) ?></span>
                     <span class="choice-meta"><?= e($st['specialty'] ?? 'Stylist') ?></span>
                 </a>

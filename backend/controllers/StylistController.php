@@ -14,6 +14,10 @@ class StylistController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             csrf_check();
             [$data, $serviceIds, $errors] = $this->validate($_POST);
+            [$upload, $photoError] = $this->checkPhoto();
+            if ($photoError) {
+                $errors[] = $photoError;
+            }
 
             if ($errors) {
                 remember_old($_POST);
@@ -28,14 +32,18 @@ class StylistController
             try {
                 $stmt = $pdo->prepare('INSERT INTO stylists (full_name, specialty) VALUES (:full_name, :specialty)');
                 $stmt->execute($data);
-                $this->saveServices((int) $pdo->lastInsertId(), $serviceIds);
+                $newId = (int) $pdo->lastInsertId();
+                $this->saveServices($newId, $serviceIds);
                 $pdo->commit();
             } catch (Throwable $e) {
                 $pdo->rollBack();
                 throw $e;
             }
 
-            logged_flash('stylists', 'create', 'Stylist "' . $data['full_name'] . '" added.');
+            if ($upload) {
+                $this->storePhoto($newId, $upload);
+            }
+            logged_flash('stylists', 'create', 'Stylist "' . $data['full_name'] . '" added' . ($upload ? ' with a photo.' : '.') . ' They now show on the website.');
             redirect('admin/stylists');
         }
 
@@ -82,6 +90,10 @@ class StylistController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             csrf_check();
             [$data, $serviceIds, $errors] = $this->validate($_POST);
+            [$upload, $photoError] = $this->checkPhoto();
+            if ($photoError) {
+                $errors[] = $photoError;
+            }
 
             if ($errors) {
                 remember_old($_POST);
@@ -89,6 +101,12 @@ class StylistController
                     flash('error', $error);
                 }
                 redirect('admin/stylists/edit', ['id' => $id]);
+            }
+
+            // A photo named after the old name would be lost on a rename: give it the stylist's id instead.
+            $oldFile = stylist_photo_file($stylist);
+            if ($oldFile && !str_starts_with(basename($oldFile), 'stylist-') && $data['full_name'] !== $stylist['full_name']) {
+                @rename($this->imgDir() . basename($oldFile), $this->imgDir() . "stylist-$id.jpg");
             }
 
             $pdo = db();
@@ -103,7 +121,15 @@ class StylistController
                 throw $e;
             }
 
-            logged_flash('stylists', 'update', 'Stylist "' . $data['full_name'] . '" updated.');
+            $photoNote = '';
+            if ($upload) {
+                $this->storePhoto($id, $upload);
+                $photoNote = ' New photo uploaded.';
+            } elseif (!empty($_POST['remove_photo'])) {
+                $this->deletePhotos($id, $stylist['full_name']);
+                $photoNote = ' Photo removed.';
+            }
+            logged_flash('stylists', 'update', 'Stylist "' . $data['full_name'] . '" updated.' . $photoNote);
             redirect('admin/stylists');
         }
 
@@ -173,6 +199,66 @@ class StylistController
     }
 
     /** @return array{0: array, 1: int[], 2: string[]} [clean data, service ids, errors] */
+    /** Folder where stylist photos are saved. */
+    private function imgDir(): string
+    {
+        $dir = __DIR__ . '/../../frontend/assets/img/stylists/';
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+        return $dir;
+    }
+
+    /**
+     * Check the optional "photo" upload. Returns [upload info or null, error message or null].
+     * Only real JPG, PNG or WEBP pictures up to 3 MB are accepted.
+     */
+    private function checkPhoto(): array
+    {
+        $f = $_FILES['photo'] ?? null;
+        if (!$f || ($f['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return [null, null];
+        }
+        if ($f['error'] !== UPLOAD_ERR_OK) {
+            return [null, $f['error'] === UPLOAD_ERR_INI_SIZE || $f['error'] === UPLOAD_ERR_FORM_SIZE
+                ? 'The photo is too big. Use a picture under 3 MB.'
+                : 'The photo could not be uploaded. Please try again.'];
+        }
+        if ($f['size'] > 3 * 1024 * 1024) {
+            return [null, 'The photo is too big. Use a picture under 3 MB.'];
+        }
+        $types = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        $mime  = (new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']) ?: '';
+        if (!isset($types[$mime]) || @getimagesize($f['tmp_name']) === false) {
+            return [null, 'The photo must be a JPG, PNG or WEBP picture.'];
+        }
+        return [['tmp' => $f['tmp_name'], 'ext' => $types[$mime]], null];
+    }
+
+    /** Save an uploaded photo as stylists/stylist-<id>.<ext>, replacing any older photo. */
+    private function storePhoto(int $id, array $upload): void
+    {
+        $dir = $this->imgDir();
+        foreach (['jpg', 'png', 'webp'] as $ext) {
+            if (is_file($dir . "stylist-$id.$ext")) {
+                @unlink($dir . "stylist-$id.$ext");
+            }
+        }
+        if (!move_uploaded_file($upload['tmp'], $dir . "stylist-$id.{$upload['ext']}")) {
+            flash('error', 'The details were saved, but the photo could not be saved. Check that the folder frontend/assets/img/stylists can be written to.');
+        }
+    }
+
+    /** Remove the stylist's uploaded photo (and an older photo named after them). */
+    private function deletePhotos(int $id, string $name): void
+    {
+        $dir = $this->imgDir();
+        foreach (['jpg', 'png', 'webp'] as $ext) {
+            @unlink($dir . "stylist-$id.$ext");
+        }
+        @unlink($dir . slugify($name) . '.jpg');
+    }
+
     private function validate(array $input): array
     {
         $name      = trim((string) ($input['full_name'] ?? ''));

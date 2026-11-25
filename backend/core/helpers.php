@@ -15,6 +15,39 @@ function url(string $page, array $params = []): string
     return 'index.php?' . http_build_query(['page' => $page] + $params);
 }
 
+/**
+ * Full address of the system, e.g. http://localhost/AMOURE-.../ (used for links in emails).
+ * Settings > Salon Profile can set it; otherwise it is worked out from the current page
+ * and saved, so emails sent later by the reminder job (no browser) still have it.
+ */
+function base_url(): string
+{
+    $saved = trim(setting('site_url'));
+    if ($saved !== '') {
+        return rtrim($saved, '/') . '/';
+    }
+    if (empty($_SERVER['HTTP_HOST'])) {
+        return '';
+    }
+    $https  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? '') === '443';
+    $dir    = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/');
+    $base   = ($https ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $dir . '/';
+    try {
+        db()->prepare('INSERT INTO settings (setting_key, setting_value) VALUES (:k, :v)')
+            ->execute(['k' => 'site_url', 'v' => $base]);
+    } catch (Throwable $e) {
+        // already saved by another request, or no database: fine
+    }
+    return $base;
+}
+
+/** Absolute link to a page, for emails: abs_url('customer/my-appointments', ['appt' => 5]). '' if unknown. */
+function abs_url(string $page, array $params = []): string
+{
+    $base = base_url();
+    return $base === '' ? '' : $base . url($page, $params);
+}
+
 /** Send the browser to another route and stop. */
 function redirect(string $page, array $params = []): void
 {
@@ -291,6 +324,30 @@ function ref_to_id(string $text, string $prefix): int
     return preg_match('/^\s*(?:' . preg_quote($prefix, '/') . '\s*-?\s*|#)?0*(\d{1,9})\s*$/i', $text, $m) ? (int) $m[1] : 0;
 }
 
+/** A stylist's photo file under frontend/assets/img/, or null.
+ *  Uploaded photos are stylists/stylist-<id>.<ext>; older ones are named after the stylist (stylists/<full-name>.jpg). */
+function stylist_photo_file(array $st): ?string
+{
+    foreach (['jpg', 'png', 'webp'] as $ext) {
+        if (isset($st['id']) && photo_exists("stylists/stylist-{$st['id']}.$ext")) {
+            return "stylists/stylist-{$st['id']}.$ext";
+        }
+    }
+    $named = 'stylists/' . slugify((string) $st['full_name']) . '.jpg';
+    return photo_exists($named) ? $named : null;
+}
+
+/** <img> of the stylist, or a circle with their initials when there is no photo yet. */
+function stylist_photo(array $st, string $class = ''): string
+{
+    $file = stylist_photo_file($st);
+    if ($file) {
+        return photo($file, (string) $st['full_name'], $class);
+    }
+    return '<div class="photo photo-initials ' . e($class) . '" role="img" aria-label="' . e($st['full_name']) . '"><span>'
+        . e(initials((string) $st['full_name'])) . '</span></div>';
+}
+
 function photo_exists(string $file): bool
 {
     return is_file(__DIR__ . '/../../frontend/assets/img/' . $file);
@@ -351,6 +408,12 @@ function clear_old(): void
 }
 
 /** Render frontend/views/emails/<name>.php inside the email layout and return the HTML. */
+/** A picture inside an email (sent attached, so it shows even when the site is on localhost). */
+function email_img(string $name, int $width, string $alt = '', string $style = ''): string
+{
+    return '<img src="cid:' . e($name) . '" width="' . $width . '" alt="' . e($alt) . '" style="display:block;border:0;outline:none;' . e($style) . '">';
+}
+
 function render_email(string $name, array $data = []): string
 {
     extract($data, EXTR_SKIP);

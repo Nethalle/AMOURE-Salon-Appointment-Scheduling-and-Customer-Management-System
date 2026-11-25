@@ -20,7 +20,7 @@ class HomeController
         }
 
         $stylists = db()->query(
-            'SELECT full_name, specialty FROM stylists WHERE is_active = 1 ORDER BY id LIMIT 4'
+            'SELECT id, full_name, specialty FROM stylists WHERE is_active = 1 ORDER BY id'
         )->fetchAll();
 
         // Approved reviews shown as customer vouches. Names shortened to "Jessica R." for privacy.

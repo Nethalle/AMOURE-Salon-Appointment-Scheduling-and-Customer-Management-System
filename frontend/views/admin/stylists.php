@@ -15,11 +15,11 @@
     <section class="panel"><p class="empty">No stylists yet. Add the first one.</p></section>
 <?php else: ?>
     <div class="sty-grid">
-        <?php foreach ($stylists as $st): $on = (int) $st['is_active']; $img = 'stylists/' . slugify($st['full_name']) . '.jpg'; ?>
+        <?php foreach ($stylists as $st): $on = (int) $st['is_active']; ?>
             <article class="sty-card <?= $on ? '' : 'is-off' ?>">
                 <div class="sty-photo">
-                    <?php if (photo_exists($img)): ?>
-                        <?= photo($img, $st['full_name']) ?>
+                    <?php if ($file = stylist_photo_file($st)): ?>
+                        <?= photo($file, $st['full_name']) ?>
                     <?php else: ?>
                         <span><?= e(initials($st['full_name'])) ?></span>
                     <?php endif; ?>
@@ -47,7 +47,7 @@
 
 <?php if ($services): ?>
 <dialog class="modal" id="add-stylist" <?= has_old() ? 'data-open' : '' ?>>
-    <form method="post" action="<?= e(url('admin/stylists')) ?>" novalidate>
+    <form method="post" action="<?= e(url('admin/stylists')) ?>" enctype="multipart/form-data" novalidate>
         <?= csrf_field() ?>
         <div class="modal-head">
             <h2>Add Stylist</h2>
@@ -64,11 +64,20 @@
                     <input type="text" id="specialty" name="specialty" value="<?= old('specialty') ?>" maxlength="100">
                 </div>
             </div>
+            <div class="field photo-field">
+                <label for="photo">Photo (optional)</label>
+                <div class="photo-pick">
+                    <span class="photo-preview" data-photo-preview><?= icon('image') ?></span>
+                    <span>
+                        <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp" data-photo-input>
+                        <small class="hint">JPG, PNG or WEBP, up to 3 MB. A square photo looks best. It shows on the website and when customers pick a stylist.</small>
+                    </span>
+                </div>
+            </div>
             <div>
                 <span class="lbl" style="display:block;font-weight:600;font-size:13px;margin-bottom:8px">Services this stylist performs</span>
                 <div class="svc-check-scroll"><?= service_checkboxes($services, $checked) ?></div>
             </div>
-            <small class="hint">Photo: save it as <code>frontend/assets/img/stylists/&lt;full-name&gt;.jpg</code>.</small>
         </div>
         <div class="modal-foot">
             <button type="button" class="btn btn-ghost" data-close>Cancel</button>
