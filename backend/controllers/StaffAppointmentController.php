@@ -61,9 +61,9 @@ class StaffAppointmentController
             $params['stylist'] = $f['stylist'];
         }
         if ($f['q'] !== '') {
-            $where[] = '(c.full_name LIKE :q1 OR c.phone LIKE :q2 OR c.email LIKE :q3)';
+            $where[] = '(c.full_name LIKE :q1 OR c.phone LIKE :q2 OR c.email LIKE :q3 OR a.id = :qid)';
             $like = '%' . $f['q'] . '%';
-            $params += ['q1' => $like, 'q2' => $like, 'q3' => $like];
+            $params += ['q1' => $like, 'q2' => $like, 'q3' => $like, 'qid' => ref_to_id($f['q'], 'APT') ?: -1];
         }
         $from = ' FROM appointments a
                   JOIN customers c  ON c.id  = a.customer_id

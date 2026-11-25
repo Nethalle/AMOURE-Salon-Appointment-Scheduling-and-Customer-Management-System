@@ -280,6 +280,17 @@ function category_icon(string $category): string
     return SERVICE_CATEGORIES[$category] ?? 'sparkle';
 }
 
+/** Reference numbers shown to people (the database keeps the plain id). */
+function appt_ref(int|string $id): string { return 'APT-' . str_pad((string) $id, 5, '0', STR_PAD_LEFT); }
+function cust_ref(int|string $id): string { return 'CUS-' . str_pad((string) $id, 4, '0', STR_PAD_LEFT); }
+function user_ref(int|string $id): string { return 'USR-' . str_pad((string) $id, 4, '0', STR_PAD_LEFT); }
+
+/** "APT-00012", "apt12", "#12" or "12" => 12 when the text starts with $prefix (or is only a number); else 0. */
+function ref_to_id(string $text, string $prefix): int
+{
+    return preg_match('/^\s*(?:' . preg_quote($prefix, '/') . '\s*-?\s*|#)?0*(\d{1,9})\s*$/i', $text, $m) ? (int) $m[1] : 0;
+}
+
 function photo_exists(string $file): bool
 {
     return is_file(__DIR__ . '/../../frontend/assets/img/' . $file);

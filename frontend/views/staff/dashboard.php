@@ -126,7 +126,7 @@ $plotH = $H - $padB - $padT;
                 <tbody>
                 <?php foreach ($schedule as $a): ?>
                     <tr>
-                        <td><span class="t-time"><?= e(fmt_time($a['start_time'])) ?></span><span class="cell-sub">to <?= e(fmt_time($a['end_time'])) ?></span></td>
+                        <td><span class="t-time"><?= e(fmt_time($a['start_time'])) ?></span><span class="cell-sub">to <?= e(fmt_time($a['end_time'])) ?></span><?php if (isset($a['id'])): ?><span class="ref"><?= e(appt_ref($a['id'])) ?></span><?php endif; ?></td>
                         <td><div class="cell-person"><span class="avatar-i"><?= e(initials($a['customer'])) ?></span><strong><?= e($a['customer']) ?></strong></div></td>
                         <td><?= e($a['service']) ?></td>
                         <td><?= e($a['stylist']) ?></td>

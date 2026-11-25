@@ -5,7 +5,7 @@ $sourceLabels = ['online' => 'Online', 'walk_in' => 'Walk-in', 'phone' => 'Phone
 <div class="page-head head-row">
     <div>
         <p><a href="<?= e(url('staff/customers')) ?>">← Back to customers</a></p>
-        <h1 class="card-title"><?= e($customer['full_name']) ?></h1>
+        <h1 class="card-title"><?= e($customer['full_name']) ?> <span class="ref ref-lg"><?= e(cust_ref($customer['id'])) ?></span></h1>
         <p class="muted">
             <?= $customer['user_id'] ? 'Has an online account (' . e($customer['account_email']) . ')' : 'Walk-in / phone customer, no online account' ?>
             · Customer since <?= e(date('M Y', strtotime($customer['created_at']))) ?>
@@ -59,6 +59,7 @@ $sourceLabels = ['online' => 'Online', 'walk_in' => 'Walk-in', 'phone' => 'Phone
                 <table class="table">
                     <thead>
                         <tr>
+                            <th scope="col">Booking #</th>
                             <th scope="col">Date &amp; time</th>
                             <th scope="col">Service</th>
                             <th scope="col">Stylist</th>
@@ -70,6 +71,7 @@ $sourceLabels = ['online' => 'Online', 'walk_in' => 'Walk-in', 'phone' => 'Phone
                     <tbody>
                     <?php foreach ($history as $a): ?>
                         <tr>
+                            <td><span class="ref"><?= e(appt_ref($a['id'])) ?></span></td>
                             <td><?= e(fmt_date($a['appt_date'])) ?><br><span class="muted"><?= e(fmt_time($a['start_time'])) ?> – <?= e(fmt_time($a['end_time'])) ?></span></td>
                             <td><?= e($a['service']) ?></td>
                             <td><?= e($a['stylist']) ?></td>

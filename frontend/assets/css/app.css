@@ -848,3 +848,9 @@ html[data-theme="dark"] .layout-app .pill-rose { background: #A85C5E; }
 .log-area .icon { color: var(--app-rose); }
 .log-details { max-width: 520px; line-height: 1.45; }
 .pill-soft .icon { vertical-align: -2px; }
+
+/* Reference numbers: APT-00012, CUS-0005, USR-0003 */
+.ref { display: inline-block; font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-size: 11.5px; font-weight: 600; letter-spacing: .02em; color: var(--app-rose-dark); }
+td > .ref:only-child { font-size: 12.5px; }
+.t-time + .cell-sub + .ref { margin-top: 2px; }
+.ref-lg { vertical-align: middle; margin-left: 8px; padding: 3px 10px; border-radius: 999px; background: var(--app-rose-soft); font-size: 13px; }
