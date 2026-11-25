@@ -6,8 +6,14 @@ declare(strict_types=1);
 function start_session(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
+        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || ($_SERVER['SERVER_PORT'] ?? '') === '443'
+            || strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+        ini_set('session.use_strict_mode', '1');   // refuse made-up session ids
+        ini_set('session.use_only_cookies', '1');  // never take the session id from the URL
         session_set_cookie_params([
-            'httponly' => true,
+            'httponly' => true,                    // JavaScript can't read the login cookie
+            'secure'   => $https,                  // on an https site, sent over https only
             'samesite' => 'Lax',
         ]);
         session_start();

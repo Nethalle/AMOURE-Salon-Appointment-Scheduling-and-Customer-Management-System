@@ -87,7 +87,7 @@ $tabs = [
                 </div>
                 <div class="set-section">
                     <h3>Website address</h3>
-                    <p>Used for the "View my appointment" button in emails. Filled in automatically. Change it when you put the system online.</p>
+                    <p>Used for the "View my appointment" button in emails, including the automatic reminders. Set it once your system is online, e.g. https://amouresalon.infinityfreeapp.com/</p>
                     <div class="f-grid">
                         <div class="field full">
                             <label for="site_url">System address</label>

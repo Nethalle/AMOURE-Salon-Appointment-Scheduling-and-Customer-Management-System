@@ -16,9 +16,10 @@ function url(string $page, array $params = []): string
 }
 
 /**
- * Full address of the system, e.g. http://localhost/AMOURE-.../ (used for links in emails).
- * Settings > Salon Profile can set it; otherwise it is worked out from the current page
- * and saved, so emails sent later by the reminder job (no browser) still have it.
+ * Full address of the system, e.g. https://amouresalon.example.com/ (used for links in emails).
+ * Set it in Settings > Salon Profile > Website address. Until then, links use the address of the
+ * page being used right now (fine on localhost); it is never saved from a request, because the
+ * "Host" a browser sends can be faked.
  */
 function base_url(): string
 {
@@ -26,19 +27,13 @@ function base_url(): string
     if ($saved !== '') {
         return rtrim($saved, '/') . '/';
     }
-    if (empty($_SERVER['HTTP_HOST'])) {
+    $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+    if ($host === '' || !preg_match('/^[a-z0-9.\-]+(:\d+)?$/i', $host)) {
         return '';
     }
-    $https  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? '') === '443';
-    $dir    = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/');
-    $base   = ($https ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $dir . '/';
-    try {
-        db()->prepare('INSERT INTO settings (setting_key, setting_value) VALUES (:k, :v)')
-            ->execute(['k' => 'site_url', 'v' => $base]);
-    } catch (Throwable $e) {
-        // already saved by another request, or no database: fine
-    }
-    return $base;
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? '') === '443';
+    $dir   = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/');
+    return ($https ? 'https' : 'http') . '://' . $host . $dir . '/';
 }
 
 /** Absolute link to a page, for emails: abs_url('customer/my-appointments', ['appt' => 5]). '' if unknown. */
