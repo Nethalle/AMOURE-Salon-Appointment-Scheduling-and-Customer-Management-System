@@ -27,6 +27,7 @@
 
             <label for="password">Password</label>
             <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+            <p class="forgot-link"><a href="<?= e(url('forgot-password')) ?>">Forgot password?</a></p>
 
             <button type="submit" class="btn btn-dark btn-block">Sign in <?= icon('arrow', 'icon icon-sm') ?></button>
         </form>

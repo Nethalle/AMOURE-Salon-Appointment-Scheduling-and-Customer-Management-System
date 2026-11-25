@@ -9,7 +9,14 @@ require_once __DIR__ . '/../services/Mailer.php';
 class SettingsController
 {
     /** Settings are split into tabs; each tab's form only posts its own fields. */
-    private const TABS = ['bookings', 'salon', 'notifications'];
+    private const TABS = ['bookings', 'salon', 'notifications', 'security'];
+
+    /** Checkboxes => the tab that shows them (an unticked box sends nothing, so only that tab may turn it off). */
+    private const CHECKBOXES = [
+        'booking_emails_enabled' => 'notifications',
+        'reminders_enabled'      => 'notifications',
+        'require_2fa_staff'      => 'security',
+    ];
 
     public function index(): void
     {
@@ -113,13 +120,13 @@ class SettingsController
 
         // Fields not on this tab keep their current value.
         foreach (array_keys(SETTING_DEFAULTS) as $key) {
-            if (!array_key_exists($key, $in) && !in_array($key, ['booking_emails_enabled', 'reminders_enabled'], true)) {
+            if (!array_key_exists($key, $in) && !isset(self::CHECKBOXES[$key])) {
                 $in[$key] = setting($key);
             }
         }
         // Checkboxes: unticked boxes send nothing, so only read them on the tab that shows them.
-        if ($tab !== 'notifications') {
-            foreach (['booking_emails_enabled', 'reminders_enabled'] as $key) {
+        foreach (self::CHECKBOXES as $key => $boxTab) {
+            if ($tab !== $boxTab) {
                 if (setting($key) === '1') {
                     $in[$key] = '1';
                 } else {
@@ -144,6 +151,7 @@ class SettingsController
             'facebook_url'            => trim((string) ($in['facebook_url'] ?? '')),
             'tiktok_url'              => trim((string) ($in['tiktok_url'] ?? '')),
             'site_url'                => trim((string) ($in['site_url'] ?? '')),
+            'require_2fa_staff'       => isset($in['require_2fa_staff']) ? '1' : '0',
         ];
 
         $errors = [];

@@ -11,6 +11,8 @@ CREATE DATABASE IF NOT EXISTS amoure_salon_db
 USE amoure_salon_db;
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS trusted_devices;
+DROP TABLE IF EXISTS auth_codes;
 DROP TABLE IF EXISTS email_logs;
 DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS appointments;
@@ -32,6 +34,7 @@ CREATE TABLE users (
   password_hash  VARCHAR(255) NOT NULL,
   role           ENUM('admin','staff','customer') NOT NULL DEFAULT 'customer',
   is_active      TINYINT(1) NOT NULL DEFAULT 1,
+  two_factor_enabled TINYINT(1) NOT NULL DEFAULT 0,  -- 2-step verification by email code
   created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_users_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -199,3 +202,30 @@ BEGIN
   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Activity log entries cannot be deleted.';
 END$$
 DELIMITER ;
+
+-- ---------- forgot password + 2-step verification ----------
+-- One-time 6-digit codes sent by email (stored hashed, like passwords).
+CREATE TABLE IF NOT EXISTS auth_codes (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT UNSIGNED NOT NULL,
+  purpose     ENUM('reset','login') NOT NULL,     -- reset = forgot password, login = 2-step code
+  code_hash   VARCHAR(255) NOT NULL,
+  attempts    TINYINT UNSIGNED NOT NULL DEFAULT 0, -- wrong tries on this code
+  expires_at  DATETIME NOT NULL,
+  used_at     DATETIME NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_auth_codes_user (user_id, purpose, created_at),
+  CONSTRAINT fk_auth_codes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- "Remember this device for 30 days" after a 2-step login (only a hash of the browser's token is kept).
+CREATE TABLE IF NOT EXISTS trusted_devices (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT UNSIGNED NOT NULL,
+  token_hash  CHAR(64) NOT NULL,
+  expires_at  DATETIME NOT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_trusted_token (token_hash),
+  KEY idx_trusted_user (user_id),
+  CONSTRAINT fk_trusted_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
