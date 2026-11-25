@@ -28,7 +28,7 @@ class CustomerController
                 ->execute($data);
             $id = (int) $pdo->lastInsertId();
 
-            flash('success', 'Customer "' . $data['full_name'] . '" added.');
+            logged_flash('customers', 'create', 'Customer "' . $data['full_name'] . '" added.');
             redirect('staff/customers/view', ['id' => $id]);
         }
 
@@ -37,14 +37,15 @@ class CustomerController
         $per  = 10;
 
         $params = [];
-        $where  = '';
+        // Only real customers: walk-ins (no login) and customer accounts. Admin/staff logins are hidden.
+        $where  = "WHERE (c.user_id IS NULL OR u.role = 'customer')";
         if ($q !== '') {
-            $where = 'WHERE c.full_name LIKE :q1 OR c.phone LIKE :q2 OR c.email LIKE :q3';
+            $where .= ' AND (c.full_name LIKE :q1 OR c.phone LIKE :q2 OR c.email LIKE :q3)';
             $like  = '%' . $q . '%';
             $params = ['q1' => $like, 'q2' => $like, 'q3' => $like];
         }
 
-        $stmt = db()->prepare("SELECT COUNT(*) FROM customers c $where");
+        $stmt = db()->prepare("SELECT COUNT(*) FROM customers c LEFT JOIN users u ON u.id = c.user_id $where");
         $stmt->execute($params);
         $total = (int) $stmt->fetchColumn();
         $pages = max(1, (int) ceil($total / $per));
@@ -56,6 +57,7 @@ class CustomerController
                     SUM(CASE WHEN a.status = 'completed' THEN 1 ELSE 0 END) AS completed,
                     MAX(CASE WHEN a.status IN ('pending','confirmed','completed') THEN a.appt_date END) AS last_appt
                FROM customers c
+               LEFT JOIN users u ON u.id = c.user_id
                LEFT JOIN appointments a ON a.customer_id = c.id
                $where
               GROUP BY c.id, c.full_name, c.phone, c.email, c.user_id
@@ -103,7 +105,7 @@ class CustomerController
                 'UPDATE customers SET full_name = :full_name, phone = :phone, email = :email, notes = :notes WHERE id = :id'
             )->execute($data + ['id' => $id]);
 
-            flash('success', 'Customer details saved.');
+            logged_flash('customers', 'update', 'Customer details saved for "' . $data['full_name'] . '".');
             redirect('staff/customers/view', ['id' => $id]);
         }
 

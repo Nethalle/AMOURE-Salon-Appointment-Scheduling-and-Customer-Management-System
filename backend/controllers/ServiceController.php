@@ -32,7 +32,7 @@ class ServiceController
             );
             $stmt->execute($data);
 
-            flash('success', 'Service "' . $data['name'] . '" added.');
+            logged_flash('services', 'create', 'Service "' . $data['name'] . '" added.');
             redirect('admin/services', ['category' => $data['category']]);
         }
 
@@ -102,7 +102,7 @@ class ServiceController
             );
             $stmt->execute($data + ['id' => $id]);
 
-            flash('success', 'Service "' . $data['name'] . '" updated.');
+            logged_flash('services', 'update', 'Service "' . $data['name'] . '" updated (' . peso($data['price']) . ', ' . $data['duration'] . ' min).');
             redirect('admin/services', ['category' => $data['category']]);
         }
 
@@ -129,7 +129,7 @@ class ServiceController
         $stmt = db()->prepare('UPDATE services SET is_active = :active WHERE id = :id');
         $stmt->execute(['active' => $newState, 'id' => $id]);
 
-        flash('success', 'Service "' . $service['name'] . '" ' . ($newState ? 'activated.' : 'deactivated. It can no longer be booked.'));
+        logged_flash('services', $newState ? 'activate' : 'deactivate', 'Service "' . $service['name'] . '" ' . ($newState ? 'activated.' : 'deactivated. It can no longer be booked.'));
         redirect('admin/services', isset(SERVICE_CATEGORIES[$service['category'] ?? '']) ? ['category' => $service['category']] : []);
     }
 

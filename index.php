@@ -11,6 +11,7 @@ require __DIR__ . '/backend/core/db.php';
 require __DIR__ . '/backend/core/csrf.php';
 require __DIR__ . '/backend/core/auth.php';
 require __DIR__ . '/backend/core/settings.php';
+require __DIR__ . '/backend/core/activity.php';
 
 start_session();
 
@@ -50,6 +51,7 @@ $routes = [
     'admin/reviews'            => ['ReviewController', 'index'],
     'admin/reviews/moderate'   => ['ReviewController', 'moderate'],
     'notifications/read'       => ['NotificationController', 'read'],
+    'admin/activity'           => ['ActivityController', 'index'],
 ];
 
 $page = $_GET['page'] ?? 'home';

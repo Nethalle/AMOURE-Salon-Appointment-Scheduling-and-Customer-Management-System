@@ -833,3 +833,18 @@ html[data-theme="dark"] .layout-app .pill-rose { background: #A85C5E; }
 .app-page > section.panel-flush:last-of-type .empty { flex: 1; display: grid; place-items: center; }
 .app-page > section.panel-flush:last-of-type .pager { margin-top: auto; }
 @media (max-width: 1280px) { .appt-grid > .mini-cal { position: static; } }
+
+/* Customer: own review status + edit link */
+.review-status { margin: 4px 0 18px; padding: 14px 16px; border: 1px solid var(--app-line); border-radius: 12px; background: var(--app-card); }
+.review-status .badge { margin-right: 8px; }
+.review-status p { margin: 8px 0 0; font-size: 13px; }
+.review-flag { display: block; font-size: 11.5px; }
+.review-edit { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 12.5px; font-weight: 600; color: var(--app-rose); text-decoration: none; }
+.review-edit:hover { text-decoration: underline; }
+.review-edit .icon { width: 13px; height: 13px; }
+
+/* Activity log */
+.log-area { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
+.log-area .icon { color: var(--app-rose); }
+.log-details { max-width: 520px; line-height: 1.45; }
+.pill-soft .icon { vertical-align: -2px; }

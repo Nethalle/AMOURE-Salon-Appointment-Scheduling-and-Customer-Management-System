@@ -72,6 +72,7 @@ class SettingsController
         $text = "This is a test email from AMOURÉ SALON.\nIf you can read this, booking, cancellation and reminder emails will work too.";
         $error = Mailer::send($to, $to, 'Test email from AMOURÉ SALON', $html, $text);
 
+        log_activity('settings', 'test_email', "Test email to $to: " . ($error === null ? 'sent' : 'failed'));
         if ($error === null) {
             flash('success', "Test email sent to $to. Check the inbox (and the Spam folder).");
         } else {
@@ -96,6 +97,7 @@ class SettingsController
         }
 
         $result = NotificationService::sendDueReminders();
+        log_activity('settings', 'send_reminders', "Sent due reminders manually: {$result['sent']} sent, {$result['failed']} failed.");
         if ($result['sent'] === 0 && $result['failed'] === 0) {
             flash('success', 'No reminders are due right now.');
         } else {
@@ -198,7 +200,7 @@ class SettingsController
         }
         $pdo->commit();
 
-        flash('success', 'Settings saved.');
+        logged_flash('settings', 'update', 'Settings saved (' . $tab . ' tab).');
         redirect('admin/settings', ['tab' => $tab]);
     }
 }

@@ -12,7 +12,7 @@ class ReviewController
         'remove'  => [['pending', 'approved'], 'removed'],
     ];
 
-    /** Customer: write a review for one of their own completed appointments. */
+    /** Customer: write a review for one of their own completed appointments, or view and edit it later. */
     public function write(): void
     {
         $user = require_role(['customer']);
@@ -28,10 +28,7 @@ class ReviewController
             flash('error', 'You can review an appointment once it has been completed.');
             redirect('customer/my-appointments');
         }
-        if ($appt['review_id']) {
-            flash('error', 'You have already reviewed this appointment. Thank you!');
-            redirect('customer/my-appointments');
-        }
+        $editing = (bool) $appt['review_id'];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             csrf_check();
@@ -54,6 +51,24 @@ class ReviewController
                 redirect('customer/review', ['id' => $id]);
             }
 
+            if ($editing) {
+                $changed = $rating !== (int) $appt['review_rating'] || $comment !== (string) ($appt['review_comment'] ?? '');
+                if (!$changed) {
+                    flash('success', 'No changes to save.');
+                    redirect('customer/my-appointments');
+                }
+                // An edited review goes back to the salon for approval before it shows publicly again.
+                db()->prepare(
+                    "UPDATE reviews SET rating = :rating, comment = :comment, status = 'pending' WHERE id = :id"
+                )->execute([
+                    'rating'  => $rating,
+                    'comment' => $comment !== '' ? $comment : null,
+                    'id'      => $appt['review_id'],
+                ]);
+                logged_flash('reviews', 'customer_edit', 'Your review was updated. It will show on our page again once the salon approves it.');
+                redirect('customer/my-appointments');
+            }
+
             try {
                 db()->prepare(
                     "INSERT INTO reviews (appointment_id, rating, comment, status, created_at)
@@ -70,11 +85,11 @@ class ReviewController
                 redirect('customer/my-appointments');
             }
 
-            flash('success', 'Thank you for your review! It will appear on our page once approved.');
+            logged_flash('reviews', 'customer_create', 'Thank you for your review! It will appear on our page once approved.');
             redirect('customer/my-appointments');
         }
 
-        view('customer/review', ['title' => 'Leave a review', 'appt' => $appt]);
+        view('customer/review', ['title' => $editing ? 'Your review' : 'Leave a review', 'appt' => $appt, 'editing' => $editing]);
     }
 
     /** Admin: list reviews by status. */
@@ -145,7 +160,7 @@ class ReviewController
         $new = self::ACTIONS[$action][1];
         db()->prepare('UPDATE reviews SET status = :status WHERE id = :id')->execute(['status' => $new, 'id' => $id]);
 
-        flash('success', $new === 'approved' ? 'Review approved. It now shows on the home page.' : 'Review removed. It no longer shows on the home page.');
+        logged_flash('reviews', $new === 'approved' ? 'approve' : 'remove', $new === 'approved' ? 'Review approved. It now shows on the home page.' : 'Review removed. It no longer shows on the home page.');
         redirect('admin/reviews', ['status' => $back]);
     }
 
@@ -157,7 +172,8 @@ class ReviewController
             return null;
         }
         $stmt = db()->prepare(
-            'SELECT a.id, a.appt_date, a.start_time, a.status, s.name AS service, st.full_name AS stylist, r.id AS review_id
+            'SELECT a.id, a.appt_date, a.start_time, a.status, s.name AS service, st.full_name AS stylist,
+                    r.id AS review_id, r.rating AS review_rating, r.comment AS review_comment, r.status AS review_status, r.created_at AS review_date
                FROM appointments a
                JOIN customers c  ON c.id  = a.customer_id
                JOIN services s   ON s.id  = a.service_id

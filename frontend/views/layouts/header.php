@@ -23,6 +23,7 @@ if ($user && $user['role'] === 'admin') {
         'admin/reviews'      => ['Reviews', 'star'],
         'admin/reports'      => ['Reports', 'bar'],
         'admin/users'        => ['User Accounts', 'shield'],
+        'admin/activity'     => ['Activity Log', 'clock'],
     ];
 } elseif ($user && $user['role'] === 'staff') {
     $sidebar = [
