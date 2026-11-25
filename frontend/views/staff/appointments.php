@@ -62,7 +62,7 @@ $calQuery = array_diff_key($keep, ['date' => 1]) + ($filters['tab'] !== 'all' &&
             </select>
             <div class="search-box grow">
                 <?= icon('search') ?>
-                <input type="search" name="q" value="<?= e($filters['q']) ?>" placeholder="Search name, phone or APT-…" aria-label="Search">
+                <input type="search" name="q" value="<?= e($filters['q']) ?>" placeholder="Search anything: customer, stylist, service, APT-00012, pending…" aria-label="Search">
             </div>
             <?php if ($keep): ?>
                 <a href="<?= e(url('staff/appointments', $filters['tab'] === 'all' ? [] : ['tab' => $filters['tab']])) ?>" class="btn btn-ghost btn-small">Clear</a>

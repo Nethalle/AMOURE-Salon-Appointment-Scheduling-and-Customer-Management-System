@@ -61,9 +61,44 @@ class StaffAppointmentController
             $params['stylist'] = $f['stylist'];
         }
         if ($f['q'] !== '') {
-            $where[] = '(c.full_name LIKE :q1 OR c.phone LIKE :q2 OR c.email LIKE :q3 OR a.id = :qid)';
-            $like = '%' . $f['q'] . '%';
-            $params += ['q1' => $like, 'q2' => $like, 'q3' => $like, 'qid' => ref_to_id($f['q'], 'APT') ?: -1];
+            // Search everything: booking #, customer, phone, email, service, category, stylist, status, source, date.
+            // Several words must all match (e.g. "sofia rebond" = Sofia's rebond appointments).
+            $words = preg_split('/\s+/', $f['q']) ?: [];
+            if (($id = ref_to_id($f['q'], 'APT')) > 0) {
+                $words = [];                       // a booking number finds exactly that booking
+                $where[] = 'a.id = :qid';
+                $params['qid'] = $id;
+            } elseif (preg_match('/^(?:[a-z]{3,9}\.?\s*\d{1,2}(?:,?\s*\d{4})?|\d{1,2}[\/-]\d{1,2}(?:[\/-]\d{2,4})?|\d{4}-\d{2}-\d{2})$/i', $f['q'])
+                      && ($ts = strtotime($f['q'])) !== false) {
+                $words = [];                       // whole search is a date: "Nov 26", "11/26", "2026-11-26"
+                $where[] = 'a.appt_date = :qdate';
+                $params['qdate'] = date('Y-m-d', $ts);
+            }
+            $statusWords = ['pending' => 'pending', 'confirmed' => 'confirmed', 'completed' => 'completed',
+                            'done' => 'completed', 'cancelled' => 'cancelled', 'canceled' => 'cancelled',
+                            'no-show' => 'no_show', 'noshow' => 'no_show', 'walk-in' => 'walk_in', 'walkin' => 'walk_in'];
+            foreach (array_slice($words, 0, 6) as $i => $word) {
+                $like = '%' . $word . '%';
+                $cols = ['c.full_name', 'c.phone', 'c.email', 's.name', 's.category', 'st.full_name', 'a.source', 'a.appt_date'];
+                $ors  = [];
+                foreach ($cols as $j => $col) {
+                    $ors[] = "$col LIKE :w{$i}_{$j}";
+                    $params["w{$i}_{$j}"] = $like;
+                }
+                $key = strtolower($word);
+                if (isset($statusWords[$key])) {
+                    $ors[] = "a.status = :ws{$i}";
+                    $ors[] = "a.source = :wsrc{$i}";
+                    $params["ws{$i}"]   = $statusWords[$key];
+                    $params["wsrc{$i}"] = $statusWords[$key];
+                }
+                if (($ts = strtotime($word . (preg_match('/\d{4}/', $word) ? '' : ' ' . date('Y')))) !== false && preg_match('/[a-z]{3}|\d+[\/-]\d+/i', $word) && !isset($statusWords[$key])) {
+                    // "nov26", "11/26", "2026-11-26" => that date
+                    $ors[] = "a.appt_date = :wd{$i}";
+                    $params["wd{$i}"] = date('Y-m-d', $ts);
+                }
+                $where[] = '(' . implode(' OR ', $ors) . ')';
+            }
         }
         $from = ' FROM appointments a
                   JOIN customers c  ON c.id  = a.customer_id
