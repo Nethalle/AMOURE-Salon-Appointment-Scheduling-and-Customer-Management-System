@@ -39,3 +39,7 @@
     .team-card { width: 210px; }
     .team-photo { width: 200px; height: 200px; }
 }
+
+/* Stylist without a photo yet: circle with initials */
+.photo-initials { display: grid; place-items: center; border-radius: 50%; background: var(--blush, #F3E1DC); color: var(--rose-btn, #A6625C); }
+.photo-initials span { font: 600 56px 'Cormorant Garamond', serif; letter-spacing: .02em; }

@@ -128,7 +128,7 @@ $gallery = [
     <div class="team-grid">
         <?php foreach ($stylists as $st): ?>
             <figure class="team-card">
-                <?= photo('stylists/' . slugify($st['full_name']) . '.jpg', $st['full_name'], 'team-photo') ?>
+                <?= stylist_photo($st, 'team-photo') ?>
                 <figcaption>
                     <strong><?= e($st['full_name']) ?></strong>
                     <span class="muted"><?= e($st['specialty'] ?? 'Stylist') ?></span>

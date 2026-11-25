@@ -98,6 +98,15 @@ final class Mailer
             $mail->addAddress($to, $toName);
 
             $mail->isHTML(true);
+            // Attach the pictures the email uses (logo, icons): <img src="cid:name">.
+            $imgDir = __DIR__ . '/../../frontend/assets/img/email/';
+            if (preg_match_all('/src="cid:([a-z0-9-]+)"/', $html, $m)) {
+                foreach (array_unique($m[1]) as $cid) {
+                    if (is_file($imgDir . $cid . '.png')) {
+                        $mail->addEmbeddedImage($imgDir . $cid . '.png', $cid, $cid . '.png', PHPMailer::ENCODING_BASE64, 'image/png');
+                    }
+                }
+            }
             $mail->Subject = $subject;
             $mail->Body    = $html;
             $mail->AltBody = $text;
