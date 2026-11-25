@@ -1306,3 +1306,7 @@ a.nav-user { text-decoration: none; }
 .divider-text::before, .divider-text::after { background: #F0D6D1; }
 .strong-link { color: #A85C5E; }
 .strong-link:hover { color: #8F4A50; }
+
+/* Info note (e.g. first-time setup link on the login page) */
+.alert-info { background: #F4EEE6; color: #6B5233; border: 1px solid #E6D7C2; }
+.alert-info a { color: inherit; }

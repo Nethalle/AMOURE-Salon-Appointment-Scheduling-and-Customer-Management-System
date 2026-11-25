@@ -13,6 +13,15 @@ require __DIR__ . '/backend/core/auth.php';
 require __DIR__ . '/backend/core/settings.php';
 require __DIR__ . '/backend/core/activity.php';
 
+// Basic security headers.
+header('X-Content-Type-Options: nosniff');          // browsers must not guess file types
+header('X-Frame-Options: SAMEORIGIN');              // other sites can't show this system inside a frame
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header("Permissions-Policy: camera=(), microphone=(), geolocation=()");
+if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? '') === '443') {
+    header('Strict-Transport-Security: max-age=31536000'); // only on https: keep using https
+}
+
 start_session();
 
 // route => [Controller, method]
@@ -51,6 +60,7 @@ $routes = [
     'admin/reviews'            => ['ReviewController', 'index'],
     'admin/reviews/moderate'   => ['ReviewController', 'moderate'],
     'notifications/read'       => ['NotificationController', 'read'],
+    'setup'                    => ['SetupController', 'index'],
     'admin/activity'           => ['ActivityController', 'index'],
 ];
 

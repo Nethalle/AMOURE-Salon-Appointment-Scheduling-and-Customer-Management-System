@@ -20,6 +20,16 @@ function start_session(): void
     }
 }
 
+/** True once at least one admin account exists (false on a brand-new install). */
+function has_admin(): bool
+{
+    try {
+        return (int) db()->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn() > 0;
+    } catch (Throwable $e) {
+        return true; // can't tell (database problem): keep the setup page closed
+    }
+}
+
 /** The logged-in user ['id', 'name', 'role'], or null. */
 function current_user(): ?array
 {
