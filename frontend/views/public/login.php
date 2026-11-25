@@ -12,6 +12,11 @@
         <h1 class="auth-title">Welcome Back</h1>
         <p class="muted">Please enter your account details to continue.</p>
 
+        <?php if (!has_admin()): ?>
+            <div class="alert alert-info" role="status">
+                New system? <a href="<?= e(url('setup')) ?>" class="strong-link">Create the first admin account</a>
+            </div>
+        <?php endif; ?>
         <?php require __DIR__ . '/_auth-flashes.php'; ?>
 
         <form method="post" action="<?= e(url('login')) ?>" class="form" novalidate>
