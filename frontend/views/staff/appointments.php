@@ -76,6 +76,7 @@ $calQuery = array_diff_key($keep, ['date' => 1]) + ($filters['tab'] !== 'all' &&
                 <table class="table">
                     <thead>
                         <tr>
+                            <th scope="col">Booking #</th>
                             <th scope="col">Date &amp; Time</th>
                             <th scope="col">Customer</th>
                             <th scope="col">Service</th>
@@ -87,10 +88,10 @@ $calQuery = array_diff_key($keep, ['date' => 1]) + ($filters['tab'] !== 'all' &&
                     <tbody>
                     <?php foreach ($appointments as $a): ?>
                         <tr>
+                            <td><span class="ref"><?= e(appt_ref($a['id'])) ?></span></td>
                             <td>
                                 <span class="t-time"><?= e(fmt_time($a['start_time'])) ?></span>
                                 <span class="cell-sub"><?= e(date('D, M j', strtotime($a['appt_date']))) ?></span>
-                                <span class="ref"><?= e(appt_ref($a['id'])) ?></span>
                             </td>
                             <td>
                                 <div class="cell-person">

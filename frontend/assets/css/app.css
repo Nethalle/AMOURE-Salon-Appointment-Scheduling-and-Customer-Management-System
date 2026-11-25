@@ -882,3 +882,22 @@ html[data-theme="dark"] .slot-noroom, html[data-theme="dark"] .slot-legend .sl-n
 .avatar-photo { position: relative; overflow: hidden; padding: 0 !important; }
 .avatar-photo .photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
 .avatar-photo .photo-initials span { font-size: 22px; }
+
+/* ID columns + highlighted appointment (opened from an email) */
+td > .ref { font-size: 12.5px; white-space: nowrap; }
+.layout-app .table tr.row-focus td { background: #FCEFEC; box-shadow: inset 0 1px 0 #F0C9C3, inset 0 -1px 0 #F0C9C3; }
+.layout-app .table tr.row-focus td:first-child { box-shadow: inset 3px 0 0 var(--app-rose), inset 0 1px 0 #F0C9C3, inset 0 -1px 0 #F0C9C3; }
+html[data-theme="dark"] .layout-app .table tr.row-focus td { background: #3A2629; }
+/* Appointments: keep every column (incl. Action) visible next to the calendar */
+.appt-grid { grid-template-columns: minmax(0, 1fr) 280px; }
+.appt-grid .table th, .appt-grid .table td { padding-left: 10px; padding-right: 10px; }
+.appt-grid .table .avatar-i { width: 34px; height: 34px; font-size: 12.5px; }
+.appt-grid .table .cell-person { gap: 10px; }
+.appt-grid .mini-cal { padding: 18px; }
+.appt-grid .mini-cal td a { width: 30px; height: 30px; }
+@media (max-width: 1440px) {
+    .appt-grid .table .cell-person small { display: none; }
+}
+
+/* Services: search bar */
+.svc-admin-search { max-width: 640px; margin: 0 0 22px; }

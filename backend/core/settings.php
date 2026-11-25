@@ -19,6 +19,8 @@ const SETTING_DEFAULTS = [
     'instagram_url'           => '',
     'facebook_url'            => '',
     'tiktok_url'              => '',
+    // Full web address of the system, used for buttons in emails (learned automatically)
+    'site_url'                => '',
 ];
 
 function setting(string $key): string

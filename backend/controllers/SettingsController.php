@@ -143,6 +143,7 @@ class SettingsController
             'instagram_url'           => trim((string) ($in['instagram_url'] ?? '')),
             'facebook_url'            => trim((string) ($in['facebook_url'] ?? '')),
             'tiktok_url'              => trim((string) ($in['tiktok_url'] ?? '')),
+            'site_url'                => trim((string) ($in['site_url'] ?? '')),
         ];
 
         $errors = [];
@@ -178,6 +179,12 @@ class SettingsController
             if ($v[$key] !== '' && (!filter_var($v[$key], FILTER_VALIDATE_URL) || !str_starts_with($v[$key], 'https://') || strlen($v[$key]) > 250)) {
                 $errors[] = "The $label link must be a full address starting with https://, or empty.";
             }
+        }
+
+        if ($v['site_url'] !== '' && (!filter_var($v['site_url'], FILTER_VALIDATE_URL) || !preg_match('#^https?://#', $v['site_url']))) {
+            $errors[] = 'The website address must start with http:// or https://.';
+        } elseif ($v['site_url'] !== '') {
+            $v['site_url'] = rtrim($v['site_url'], '/') . '/';
         }
 
         if ($errors) {

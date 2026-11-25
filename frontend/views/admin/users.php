@@ -25,6 +25,7 @@ $tabs = ['' => ['All', array_sum($roleCounts)], 'admin' => ['Admins', $roleCount
             <table class="table">
                 <thead>
                     <tr>
+                        <th scope="col">User ID</th>
                         <th scope="col">Name</th>
                         <th scope="col">Role</th>
                         <th scope="col">Email</th>
@@ -36,13 +37,11 @@ $tabs = ['' => ['All', array_sum($roleCounts)], 'admin' => ['Admins', $roleCount
                 <tbody>
                 <?php foreach ($users as $u): $isMe = (int) $u['id'] === (int) $me['id']; $on = (int) $u['is_active']; ?>
                     <tr class="<?= $on ? '' : 'row-inactive' ?>">
+                        <td><span class="ref"><?= e(user_ref($u['id'])) ?></span></td>
                         <td>
                             <div class="cell-person">
                                 <span class="avatar-i"><?= e(initials($u['name'])) ?></span>
-                                <span>
-                                    <strong><?= e($u['name']) ?><?= $isMe ? ' <span class="muted" style="font-weight:400">(you)</span>' : '' ?></strong>
-                                    <small><span class="ref"><?= e(user_ref($u['id'])) ?></span></small>
-                                </span>
+                                <strong><?= e($u['name']) ?><?= $isMe ? ' <span class="muted" style="font-weight:400">(you)</span>' : '' ?></strong>
                             </div>
                         </td>
                         <td><span class="badge <?= e($roleBadge[$u['role']]) ?>"><?= e($roleLabels[$u['role']]) ?></span></td>

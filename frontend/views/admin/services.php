@@ -4,8 +4,46 @@ $activeRows = array_filter($services, fn ($s) => (int) $s['is_active']);
 $activeGrp  = group_services($activeRows);
 $mainCats   = array_diff_key($activeGrp, array_flip(SEPARATE_CATEGORIES), ['Other' => 1]);
 $shown      = $category !== '' ? [$category => $groups[$category] ?? []] : [];
+
+// Search: ?q=gel (inside a category it only searches that category).
+$q = trim((string) ($_GET['q'] ?? ''));
+if ($q !== '') {
+    $needle  = mb_strtolower($q);
+    $matches = array_filter($services, static fn ($s) =>
+        ($category === '' || ($s['category'] ?? '') === $category)
+        && (str_contains(mb_strtolower($s['name']), $needle) || str_contains(mb_strtolower((string) ($s['category'] ?? '')), $needle)));
+    $shown = group_services($matches);
+}
+$searchBox = static function (string $category, string $q): string {
+    ob_start(); ?>
+    <form method="get" action="index.php" class="toolbar svc-admin-search" role="search">
+        <input type="hidden" name="page" value="admin/services">
+        <?php if ($category !== ''): ?><input type="hidden" name="category" value="<?= e($category) ?>"><?php endif; ?>
+        <div class="search-box grow">
+            <?= icon('search') ?>
+            <input type="search" name="q" value="<?= e($q) ?>" placeholder="<?= $category !== '' ? 'Search in ' . e($category) . '…' : 'Search all services, e.g. rebond, gel, wax…' ?>" aria-label="Search services">
+        </div>
+        <button type="submit" class="btn btn-ghost">Search</button>
+        <?php if ($q !== ''): ?><a href="<?= e(url('admin/services', $category !== '' ? ['category' => $category] : [])) ?>" class="btn btn-ghost">Clear</a><?php endif; ?>
+    </form>
+    <?php return (string) ob_get_clean();
+};
 ?>
-<?php if ($category === ''): ?>
+<?php if ($category === '' && $q !== ''): ?>
+<div class="ph ph-line">
+    <div>
+        <p><a href="<?= e(url('admin/services')) ?>" class="back-link"><?= icon('chev-left', 'icon icon-sm') ?> All categories</a></p>
+        <h1>Search results</h1>
+        <p><?= count($matches) ?> service<?= count($matches) === 1 ? '' : 's' ?> found for "<?= e($q) ?>"</p>
+    </div>
+    <button type="button" class="btn btn-primary" data-dialog="add-service"><?= icon('plus') ?> Add Service</button>
+</div>
+<?= $searchBox('', $q) ?>
+<?php if (!$matches): ?>
+    <section class="panel"><p class="empty">No service matches "<?= e($q) ?>". Try another word.</p></section>
+<?php endif; ?>
+
+<?php elseif ($category === ''): ?>
 <div class="ph ph-line">
     <div>
         <h1>Services Management</h1>
@@ -13,6 +51,8 @@ $shown      = $category !== '' ? [$category => $groups[$category] ?? []] : [];
     </div>
     <button type="button" class="btn btn-primary" data-dialog="add-service"><?= icon('plus') ?> Add Service</button>
 </div>
+
+<?= $searchBox('', '') ?>
 
 <div class="sec-head">
     <h2>Salon Services</h2>
@@ -66,6 +106,11 @@ $shown      = $category !== '' ? [$category => $groups[$category] ?? []] : [];
     <button type="button" class="btn btn-primary" data-dialog="add-service"><?= icon('plus') ?> Add Service</button>
 </div>
 
+<?= $searchBox($category, $q) ?>
+<?php if ($q !== '' && !$shown): ?>
+    <section class="panel" style="margin-bottom:20px"><p class="empty">No service in <?= e($category) ?> matches "<?= e($q) ?>".</p></section>
+<?php endif; ?>
+
 <nav class="cat-chips" aria-label="Categories">
     <?php foreach ($groups as $cat => $rows): ?>
         <a href="<?= e(url('admin/services', ['category' => $cat])) ?>" <?= $category === $cat ? 'aria-current="page"' : '' ?>>
@@ -78,6 +123,9 @@ $shown      = $category !== '' ? [$category => $groups[$category] ?? []] : [];
 <?php foreach ($shown as $cat => $rows): ?>
     <?php if (!$rows): ?><section class="panel"><p class="empty">No services in this category yet.</p></section><?php continue; endif; ?>
     <section class="cat-section">
+        <?php if ($category === '' && $q !== ''): ?>
+            <h2 class="cat-title"><span class="kpi-icon"><?= icon(category_icon($cat)) ?></span> <?= e($cat) ?> <small><?= count($rows) ?></small></h2>
+        <?php endif; ?>
         <div class="svc-grid">
         <?php foreach ($rows as $s): $on = (int) $s['is_active']; ?>
             <article class="svc-card svc-compact <?= $on ? '' : 'is-off' ?>">

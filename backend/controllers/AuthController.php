@@ -40,6 +40,13 @@ class AuthController
             login_user($user);
             log_activity('account', 'login', 'Logged in.', ['id' => $user['id'], 'name' => $user['name'], 'role' => $user['role']]);
             flash('success', 'Welcome back, ' . $user['name'] . '!');
+            $next = $_SESSION['after_login'] ?? null;
+            unset($_SESSION['after_login']);
+            if (is_array($next) && is_string($next['page'] ?? null) && preg_match('#^[a-z/-]+$#', $next['page'])) {
+                $page = $next['page'];
+                unset($next['page']);
+                redirect($page, array_filter($next, 'is_scalar'));
+            }
             redirect(home_for_role($user['role']));
         }
 

@@ -86,6 +86,16 @@ $tabs = [
                     </div>
                 </div>
                 <div class="set-section">
+                    <h3>Website address</h3>
+                    <p>Used for the "View my appointment" button in emails. Filled in automatically. Change it when you put the system online.</p>
+                    <div class="f-grid">
+                        <div class="field full">
+                            <label for="site_url">System address</label>
+                            <input type="url" id="site_url" name="site_url" value="<?= $val('site_url') ?: e(base_url()) ?>" placeholder="https://amouresalon.example.com/">
+                        </div>
+                    </div>
+                </div>
+                <div class="set-section">
                     <h3>Social media</h3>
                     <p>Full links starting with https://</p>
                     <div class="f-grid">

@@ -93,9 +93,16 @@ final class NotificationService
             'reminder'     => "Reminder: your appointment on $when",
         ];
 
-        $data = $extra + ['a' => $a, 'when' => $when];
+        $data = $extra + [
+            'a'        => $a,
+            'when'     => $when,
+            'viewUrl'  => $a['user_id'] ? abs_url('customer/my-appointments', ['appt' => $a['id']]) : '',
+            'bookUrl'  => abs_url($a['user_id'] ? 'customer/book' : 'register'),
+            'siteUrl'  => abs_url('home'),
+            'hasAccount' => (bool) $a['user_id'],
+        ];
         $html = render_email($type, $data);
-        $text = self::plainText($type, $a, $when, (bool) ($extra['rescheduled'] ?? false));
+        $text = self::plainText($type, $a, $when, (bool) ($extra['rescheduled'] ?? false), $data['viewUrl']);
 
         $error = Mailer::send($a['email'], $a['customer'], 'AMOURÉ SALON · ' . $subjects[$type], $html, $text);
         self::log($appointmentId, $type, $a['email'], $error);
@@ -107,7 +114,7 @@ final class NotificationService
     {
         $stmt = db()->prepare(
             'SELECT a.id, a.appt_date, a.start_time, a.end_time, a.status,
-                    c.full_name AS customer, c.email,
+                    c.full_name AS customer, c.email, c.user_id,
                     s.name AS service, s.price, st.full_name AS stylist
                FROM appointments a
                JOIN customers c  ON c.id  = a.customer_id
@@ -137,7 +144,7 @@ final class NotificationService
         ]);
     }
 
-    private static function plainText(string $type, array $a, string $when, bool $rescheduled): string
+    private static function plainText(string $type, array $a, string $when, bool $rescheduled, string $viewUrl = ''): string
     {
         $intro = match ($type) {
             'confirmation' => $rescheduled ? 'Your appointment has been moved. Here are the new details:' : 'Your appointment is confirmed. We look forward to seeing you!',
@@ -146,10 +153,12 @@ final class NotificationService
         };
 
         return "Hi {$a['customer']},\n\n$intro\n\n"
+            . "Booking: " . appt_ref($a['id']) . "\n"
             . "Service: {$a['service']}\n"
             . "Stylist: {$a['stylist']}\n"
             . "When:    $when – " . fmt_time($a['end_time']) . "\n"
             . "Price:   " . peso($a['price']) . "\n\n"
+            . ($viewUrl !== '' ? "View your appointment: $viewUrl\n\n" : '')
             . "AMOURÉ SALON";
     }
 }

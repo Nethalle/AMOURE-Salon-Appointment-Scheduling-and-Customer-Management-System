@@ -59,6 +59,10 @@ function require_login(): array
 {
     $user = current_user();
     if ($user === null) {
+        // Remember where they were going (e.g. a "View appointment" button in an email).
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $_SESSION['after_login'] = $_GET;
+        }
         flash('error', 'Please log in first.');
         redirect('login');
     }

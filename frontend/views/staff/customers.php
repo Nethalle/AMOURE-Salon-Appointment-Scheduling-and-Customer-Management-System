@@ -25,6 +25,7 @@
             <table class="table">
                 <thead>
                     <tr>
+                        <th scope="col">Customer ID</th>
                         <th scope="col">Name</th>
                         <th scope="col">Contact</th>
                         <th scope="col">Total Visits</th>
@@ -35,12 +36,13 @@
                 <tbody>
                 <?php foreach ($customers as $c): ?>
                     <tr>
+                        <td><span class="ref"><?= e(cust_ref($c['id'])) ?></span></td>
                         <td>
                             <div class="cell-person">
                                 <span class="avatar-i"><?= e(initials($c['full_name'])) ?></span>
                                 <span>
                                     <strong><?= e($c['full_name']) ?></strong>
-                                    <small><span class="ref"><?= e(cust_ref($c['id'])) ?></span> · <?= $c['user_id'] ? 'Online account' : 'Walk-in / phone' ?></small>
+                                    <small><?= $c['user_id'] ? 'Online account' : 'Walk-in / phone' ?></small>
                                 </span>
                             </div>
                         </td>
