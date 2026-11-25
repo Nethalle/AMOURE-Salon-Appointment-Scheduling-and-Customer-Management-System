@@ -223,7 +223,7 @@ class StaffAppointmentController
             'completed' => 'marked as completed',
             'no_show'   => 'marked as no-show',
         ];
-        flash('success', "{$appt['customer']}'s appointment on " . fmt_date($appt['appt_date']) . ' at ' . fmt_time($appt['start_time']) . " was {$labels[$newStatus]}.");
+        logged_flash('appointments', $action, "{$appt['customer']}'s appointment on " . fmt_date($appt['appt_date']) . ' at ' . fmt_time($appt['start_time']) . " was {$labels[$newStatus]}.");
         $this->back();
     }
 
@@ -245,7 +245,10 @@ class StaffAppointmentController
             'pick'      => $pick,
             'services'  => db()->query('SELECT id, name, category, duration_minutes FROM services WHERE is_active = 1 ORDER BY name')->fetchAll(),
             'stylists'  => $this->stylistsWithServices(),
-            'customers' => db()->query('SELECT id, full_name, phone FROM customers ORDER BY full_name')->fetchAll(),
+            'customers' => db()->query(
+                "SELECT c.id, c.full_name, c.phone FROM customers c LEFT JOIN users u ON u.id = c.user_id
+                  WHERE c.user_id IS NULL OR u.role = 'customer' ORDER BY c.full_name"
+            )->fetchAll(),
         ]);
     }
 
@@ -314,7 +317,7 @@ class StaffAppointmentController
                 $this->emailNote(NotificationService::appointmentChanged($id, 'confirmation', true));
             }
 
-            flash('success', "{$appt['customer']}'s appointment moved to " . fmt_date($b['date']) . ' at ' . fmt_time($b['time']) . '.');
+            logged_flash('appointments', 'reschedule', "{$appt['customer']}'s appointment moved to " . fmt_date($b['date']) . ' at ' . fmt_time($b['time']) . '.');
             redirect('staff/appointments', ['from' => $b['date']]);
         }
 
@@ -533,7 +536,7 @@ class StaffAppointmentController
 
         $this->emailNote(NotificationService::appointmentChanged($appointmentId, 'confirmation'));
 
-        flash('success', 'Appointment booked for ' . fmt_date($b['date']) . ' at ' . fmt_time($b['time']) . '.');
+        logged_flash('appointments', 'create', 'Walk-in/phone appointment booked for ' . fmt_date($b['date']) . ' at ' . fmt_time($b['time']) . '.');
         redirect('staff/appointments', ['from' => $b['date']]);
     }
 }

@@ -79,6 +79,8 @@
                             <td>
                                 <?php if ($a['review_rating']): ?>
                                     <span class="stars" aria-label="<?= e($a['review_rating']) ?> out of 5 stars"><?= e(stars((int) $a['review_rating'])) ?></span>
+                                    <?php if ($a['review_status'] === 'pending'): ?><small class="muted review-flag">Waiting for approval</small><?php elseif ($a['review_status'] === 'removed'): ?><small class="muted review-flag">Not published</small><?php endif; ?>
+                                    <a href="<?= e(url('customer/review', ['id' => $a['id']])) ?>" class="review-edit"><?= icon('edit', 'icon icon-xs') ?> View / edit</a>
                                 <?php elseif ($a['status'] === 'completed'): ?>
                                     <a href="<?= e(url('customer/review', ['id' => $a['id']])) ?>" class="btn btn-small btn-ghost">Leave a review</a>
                                 <?php else: ?>

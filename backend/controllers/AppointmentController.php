@@ -167,7 +167,7 @@ class AppointmentController
         db()->prepare("UPDATE appointments SET status = 'cancelled' WHERE id = :id")->execute(['id' => $id]);
         NotificationService::appointmentChanged($id, 'cancellation');
 
-        flash('success', 'Your appointment on ' . fmt_date($appt['appt_date']) . ' at ' . fmt_time($appt['start_time']) . ' was cancelled.');
+        logged_flash('appointments', 'customer_cancel', 'Cancelled own appointment on ' . fmt_date($appt['appt_date']) . ' at ' . fmt_time($appt['start_time']) . ' was cancelled.');
         redirect('customer/my-appointments');
     }
 
@@ -227,7 +227,7 @@ class AppointmentController
             throw $e;
         }
 
-        flash('success', 'Booking request sent for ' . fmt_date($b['date']) . ' at ' . fmt_time($b['time']) . '. The salon will confirm it soon.');
+        logged_flash('appointments', 'customer_book', 'Booking request sent for ' . fmt_date($b['date']) . ' at ' . fmt_time($b['time']) . '. The salon will confirm it soon.');
         redirect('customer/my-appointments');
     }
 

@@ -24,6 +24,8 @@ class AuthController
             $user = $stmt->fetch();
 
             if (!$user || !password_verify($password, $user['password_hash'])) {
+                log_activity('account', 'login_failed', 'Failed login attempt for ' . $email . '.',
+                    $user ? ['id' => $user['id'], 'name' => $user['name'], 'role' => $user['role']] : ['id' => null, 'name' => 'Unknown', 'role' => 'guest']);
                 remember_old(['email' => $email]);
                 flash('error', 'Incorrect email or password.');
                 redirect('login');
@@ -36,6 +38,7 @@ class AuthController
             }
 
             login_user($user);
+            log_activity('account', 'login', 'Logged in.', ['id' => $user['id'], 'name' => $user['name'], 'role' => $user['role']]);
             flash('success', 'Welcome back, ' . $user['name'] . '!');
             redirect(home_for_role($user['role']));
         }
@@ -131,6 +134,7 @@ class AuthController
             }
 
             login_user(['id' => $userId, 'name' => $name, 'role' => 'customer']);
+            log_activity('account', 'register', 'Created a customer account.');
             flash('success', 'Your account is ready. Welcome to AMOURÉ SALON!');
             redirect(home_for_role('customer'));
         }
@@ -145,6 +149,7 @@ class AuthController
         }
         csrf_check();
 
+        log_activity('account', 'logout', 'Logged out.');
         logout_user();
         start_session();
         flash('success', 'You have been logged out.');

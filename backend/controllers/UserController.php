@@ -43,7 +43,7 @@ class UserController
             db()->prepare('INSERT INTO users (name, email, password_hash, role) VALUES (:name, :email, :hash, :role)')
                 ->execute(['name' => $name, 'email' => $email, 'hash' => password_hash($password, PASSWORD_DEFAULT), 'role' => $role]);
 
-            flash('success', ucfirst($role) . ' account created for ' . $name . '. Share the starting password privately and ask them to change it after logging in.');
+            logged_flash('users', 'create', ucfirst($role) . ' account created for ' . $name . '. Share the starting password privately and ask them to change it after logging in.');
             redirect('admin/users');
         }
 
@@ -100,7 +100,7 @@ class UserController
                 }
                 db()->prepare('UPDATE users SET password_hash = :hash WHERE id = :id')
                     ->execute(['hash' => password_hash($password, PASSWORD_DEFAULT), 'id' => $id]);
-                flash('success', 'Password reset for ' . $user['name'] . '. Share it privately and ask them to change it.');
+                logged_flash('users', 'reset_password', 'Password reset for ' . $user['name'] . '. Share it privately and ask them to change it.');
                 redirect('admin/users/edit', ['id' => $id]);
             }
 
@@ -146,7 +146,7 @@ class UserController
             }
 
             $roleNames = ['customer' => 'Customer', 'staff' => 'Staff', 'admin' => 'Admin'];
-            flash('success', 'Account for ' . $name . ' saved'
+            logged_flash('users', 'update', 'Account for ' . $name . ' saved'
                 . ($role !== $user['role'] ? ' and changed from ' . $roleNames[$user['role']] . ' to ' . $roleNames[$role] . '.' : '.'));
             redirect('admin/users');
         }
@@ -183,7 +183,7 @@ class UserController
         }
 
         db()->prepare('UPDATE users SET is_active = :a WHERE id = :id')->execute(['a' => $activate ? 1 : 0, 'id' => $id]);
-        flash('success', $user['name'] . '\'s account was ' . ($activate ? 'reactivated.' : 'deactivated. They can no longer log in.'));
+        logged_flash('users', $activate ? 'reactivate' : 'deactivate', $user['name'] . '\'s account was ' . ($activate ? 'reactivated.' : 'deactivated. They can no longer log in.'));
         redirect('admin/users');
     }
 
@@ -228,7 +228,7 @@ class UserController
                 ->execute(['hash' => password_hash($new, PASSWORD_DEFAULT), 'id' => $me['id']]);
             session_regenerate_id(true);
 
-            flash('success', 'Your password was changed.');
+            logged_flash('account', 'change_password', 'Your password was changed.');
             redirect(home_for_role($me['role']));
         }
 

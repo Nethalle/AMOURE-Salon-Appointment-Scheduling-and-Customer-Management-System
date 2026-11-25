@@ -35,7 +35,7 @@ class StylistController
                 throw $e;
             }
 
-            flash('success', 'Stylist "' . $data['full_name'] . '" added.');
+            logged_flash('stylists', 'create', 'Stylist "' . $data['full_name'] . '" added.');
             redirect('admin/stylists');
         }
 
@@ -103,7 +103,7 @@ class StylistController
                 throw $e;
             }
 
-            flash('success', 'Stylist "' . $data['full_name'] . '" updated.');
+            logged_flash('stylists', 'update', 'Stylist "' . $data['full_name'] . '" updated.');
             redirect('admin/stylists');
         }
 
@@ -139,7 +139,7 @@ class StylistController
         $stmt = db()->prepare('UPDATE stylists SET is_active = :active WHERE id = :id');
         $stmt->execute(['active' => $newState, 'id' => $id]);
 
-        flash('success', 'Stylist "' . $stylist['full_name'] . '" ' . ($newState ? 'activated.' : 'deactivated. They can no longer be booked.'));
+        logged_flash('stylists', $newState ? 'activate' : 'deactivate', 'Stylist "' . $stylist['full_name'] . '" ' . ($newState ? 'activated.' : 'deactivated. They can no longer be booked.'));
         redirect('admin/stylists');
     }
 

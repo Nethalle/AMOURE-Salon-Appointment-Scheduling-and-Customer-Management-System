@@ -113,7 +113,8 @@ class ReportController
         $revenueSeries = $this->buildSeries($from, $to, array_column($stmt->fetchAll(), 'amount', 'appt_date'), true);
 
         // New customer profiles created in the period.
-        $stmt = db()->prepare('SELECT COUNT(*) FROM customers WHERE created_at BETWEEN :from AND :to');
+        $stmt = db()->prepare("SELECT COUNT(*) FROM customers c LEFT JOIN users u ON u.id = c.user_id
+              WHERE (c.user_id IS NULL OR u.role = 'customer') AND c.created_at BETWEEN :from AND :to");
         $stmt->execute(['from' => $from . ' 00:00:00', 'to' => $to . ' 23:59:59']);
         $newCustomers = (int) $stmt->fetchColumn();
 
@@ -142,6 +143,7 @@ class ReportController
     {
         require_role(['admin']);
         [$from, $to] = $this->period();
+        log_activity('reports', 'export_csv', "Downloaded the appointments CSV for $from to $to.");
 
         $stmt = db()->prepare(
             'SELECT a.appt_date, a.start_time, a.end_time, c.full_name AS customer, c.phone, c.email,
