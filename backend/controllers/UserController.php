@@ -232,7 +232,68 @@ class UserController
             redirect(home_for_role($me['role']));
         }
 
-        view('account/password', ['title' => 'Change password']);
+        // 2-step verification status for this account.
+        $stmt = db()->prepare('SELECT * FROM users WHERE id = :id');
+        $stmt->execute(['id' => $me['id']]);
+        $row = $stmt->fetch() ?: [];
+        $devices = 0;
+        try {
+            $d = db()->prepare('SELECT COUNT(*) FROM trusted_devices WHERE user_id = :u AND expires_at > :now');
+            $d->execute(['u' => $me['id'], 'now' => date('Y-m-d H:i:s')]);
+            $devices = (int) $d->fetchColumn();
+            $ready = true;
+        } catch (Throwable $e) {
+            $ready = false; // database/auth-codes.sql not imported yet
+        }
+
+        view('account/password', [
+            'title'      => 'My Account',
+            'me'         => $row,
+            'twoFactor'  => !empty($row['two_factor_enabled']),
+            'requiredBy' => in_array($me['role'], ['admin', 'staff'], true) && setting('require_2fa_staff') === '1',
+            'devices'    => $devices,
+            'ready'      => $ready && array_key_exists('two_factor_enabled', $row),
+        ]);
+    }
+
+    /** My Account: turn 2-step verification on/off, or forget remembered devices. Needs the current password. */
+    public function twoFactor(): void
+    {
+        $me = require_login();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('account/password');
+        }
+        csrf_check();
+        require_once __DIR__ . '/../services/AuthCodes.php';
+
+        $action = (string) ($_POST['action'] ?? '');
+        if ($action === 'forget_devices') {
+            AuthCodes::forgetDevices((int) $me['id']);
+            logged_flash('account', '2fa_forget_devices', 'Signed out all remembered devices. They will need a code next time.');
+            redirect('account/password');
+        }
+
+        $stmt = db()->prepare('SELECT password_hash FROM users WHERE id = :id');
+        $stmt->execute(['id' => $me['id']]);
+        if (!password_verify((string) ($_POST['current_password'] ?? ''), (string) $stmt->fetchColumn())) {
+            flash('error', 'Your current password is incorrect.');
+            redirect('account/password');
+        }
+
+        $on = $action === 'enable';
+        try {
+            db()->prepare('UPDATE users SET two_factor_enabled = :on WHERE id = :id')->execute(['on' => $on ? 1 : 0, 'id' => $me['id']]);
+        } catch (PDOException $e) {
+            flash('error', '2-step verification is not set up yet. Ask the admin to import database/auth-codes.sql.');
+            redirect('account/password');
+        }
+        if (!$on) {
+            AuthCodes::forgetDevices((int) $me['id']);
+        }
+        logged_flash('account', $on ? '2fa_enabled' : '2fa_disabled', $on
+            ? '2-step verification turned on. You will get an email code when you log in.'
+            : '2-step verification turned off.');
+        redirect('account/password');
     }
 
     // ---------- helpers ----------

@@ -6,6 +6,7 @@ $tabs = [
     'bookings'      => ['Bookings & Hours', 'clock'],
     'salon'         => ['Salon Profile', 'pin'],
     'notifications' => ['Notifications', 'bell'],
+    'security'      => ['Security', 'shield'],
 ];
 ?>
 <div class="ph">
@@ -112,6 +113,27 @@ $tabs = [
                             <input type="url" id="tiktok_url" name="tiktok_url" value="<?= $val('tiktok_url') ?>" placeholder="https://tiktok.com/@…">
                         </div>
                     </div>
+                </div>
+
+            <?php elseif ($tab === 'security'): ?>
+                <div class="set-section">
+                    <h3>2-step verification</h3>
+                    <p>After the password, a 6-digit code is emailed and must be typed in. Even if someone learns a password, they can't log in without the email.</p>
+                    <label class="switch">
+                        <span><strong>Require it for admin and staff</strong><small>Every admin and staff login needs an email code. They can tick "Remember this device" for 30 days.</small></span>
+                        <span class="toggle"><input type="checkbox" name="require_2fa_staff" value="1" <?= $checked('require_2fa_staff') ?>><span></span></span>
+                    </label>
+                    <p class="hint" style="margin-top:12px">Customers can turn it on for themselves in My Account. Make sure the test email works before turning this on, or staff won't receive their codes.</p>
+                </div>
+                <div class="set-section">
+                    <h3>Already protected</h3>
+                    <p>These are always on:</p>
+                    <ul class="sec-list">
+                        <li><?= icon('check', 'icon icon-sm') ?> 5 wrong passwords lock that account for 15 minutes</li>
+                        <li><?= icon('check', 'icon icon-sm') ?> "Forgot password?" sends a one-time code that expires in 15 minutes</li>
+                        <li><?= icon('check', 'icon icon-sm') ?> Passwords are stored encrypted (hashed), never as plain text</li>
+                        <li><?= icon('check', 'icon icon-sm') ?> Every login and change is recorded in the Activity Log</li>
+                    </ul>
                 </div>
 
             <?php else: ?>

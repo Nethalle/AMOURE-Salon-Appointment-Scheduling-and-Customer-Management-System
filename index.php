@@ -61,6 +61,10 @@ $routes = [
     'admin/reviews/moderate'   => ['ReviewController', 'moderate'],
     'notifications/read'       => ['NotificationController', 'read'],
     'setup'                    => ['SetupController', 'index'],
+    'verify-login'             => ['AuthController', 'verifyLogin'],
+    'forgot-password'          => ['AuthController', 'forgotPassword'],
+    'reset-password'           => ['AuthController', 'resetPassword'],
+    'account/two-factor'       => ['UserController', 'twoFactor'],
     'admin/activity'           => ['ActivityController', 'index'],
 ];
 

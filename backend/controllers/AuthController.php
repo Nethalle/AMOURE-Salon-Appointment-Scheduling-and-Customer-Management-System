@@ -3,6 +3,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../services/AuthCodes.php';
+
 class AuthController
 {
     public function login(): void
@@ -24,7 +26,7 @@ class AuthController
             }
 
             $stmt = db()->prepare(
-                'SELECT id, name, password_hash, role, is_active FROM users WHERE email = :email LIMIT 1'
+                'SELECT * FROM users WHERE email = :email LIMIT 1'
             );
             $stmt->execute(['email' => $email]);
             $user = $stmt->fetch();
@@ -43,20 +45,223 @@ class AuthController
                 redirect('login');
             }
 
-            login_user($user);
-            log_activity('account', 'login', 'Logged in.', ['id' => $user['id'], 'name' => $user['name'], 'role' => $user['role']]);
-            flash('success', 'Welcome back, ' . $user['name'] . '!');
-            $next = $_SESSION['after_login'] ?? null;
-            unset($_SESSION['after_login']);
-            if (is_array($next) && is_string($next['page'] ?? null) && preg_match('#^[a-z/-]+$#', $next['page'])) {
-                $page = $next['page'];
-                unset($next['page']);
-                redirect($page, array_filter($next, 'is_scalar'));
+            // 2-step verification: email a code first (unless this browser is remembered).
+            if (AuthCodes::required($user) && !AuthCodes::isTrustedDevice((int) $user['id'])) {
+                $this->startTwoStep($user);
             }
-            redirect(home_for_role($user['role']));
+
+            $this->finishLogin($user, 'Logged in.');
         }
 
         view('public/login', ['title' => 'Log in', 'layout' => 'auth']);
+    }
+
+    /** Log the person in and send them where they were going. */
+    private function finishLogin(array $user, string $logText): void
+    {
+        login_user($user);
+        log_activity('account', 'login', $logText, ['id' => $user['id'], 'name' => $user['name'], 'role' => $user['role']]);
+        flash('success', 'Welcome back, ' . $user['name'] . '!');
+        $next = $_SESSION['after_login'] ?? null;
+        unset($_SESSION['after_login'], $_SESSION['pending_2fa']);
+        if (is_array($next) && is_string($next['page'] ?? null) && preg_match('#^[a-z/-]+$#', $next['page'])) {
+            $page = $next['page'];
+            unset($next['page']);
+            redirect($page, array_filter($next, 'is_scalar'));
+        }
+        redirect(home_for_role($user['role']));
+    }
+
+    /** Password was right: email a sign-in code and go to the code page. */
+    private function startTwoStep(array $user): void
+    {
+        try {
+            $error = AuthCodes::send($user, 'login');
+        } catch (Throwable $e) {
+            error_log('[AMOURE] 2-step setup error: ' . $e->getMessage());
+            $error = 'setup';
+        }
+        if ($error !== null) {
+            log_activity('account', '2fa_send_failed', 'Could not email a sign-in code.', ['id' => $user['id'], 'name' => $user['name'], 'role' => $user['role']]);
+            flash('error', $error === 'setup'
+                ? '2-step verification is not set up yet. Ask the admin to import database/auth-codes.sql.'
+                : 'We could not email your sign-in code right now. Please try again in a minute, or contact the salon.');
+            redirect('login');
+        }
+        session_regenerate_id(true);
+        $_SESSION['pending_2fa'] = [
+            'id' => (int) $user['id'], 'name' => $user['name'], 'role' => $user['role'],
+            'email' => $user['email'], 'at' => time(),
+        ];
+        log_activity('account', '2fa_code_sent', 'Password correct. Sign-in code emailed.', ['id' => $user['id'], 'name' => $user['name'], 'role' => $user['role']]);
+        redirect('verify-login');
+    }
+
+    /** Step 2 of logging in: type the emailed code. */
+    public function verifyLogin(): void
+    {
+        $p = $_SESSION['pending_2fa'] ?? null;
+        if (!is_array($p) || time() - (int) $p['at'] > AuthCodes::MINUTES * 60) {
+            unset($_SESSION['pending_2fa']);
+            flash('error', 'Your sign-in expired. Please enter your password again.');
+            redirect('login');
+        }
+        $actor = ['id' => $p['id'], 'name' => $p['name'], 'role' => $p['role']];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            csrf_check();
+
+            if (($_POST['action'] ?? '') === 'resend') {
+                [$count, $ago] = AuthCodes::recent((int) $p['id'], 'login');
+                if ($ago < AuthCodes::RESEND_WAIT) {
+                    flash('error', 'Please wait ' . (AuthCodes::RESEND_WAIT - $ago) . ' seconds before asking for a new code.');
+                } elseif ($count >= AuthCodes::MAX_PER_HOUR) {
+                    flash('error', 'Too many codes asked for. Please try again later.');
+                } else {
+                    $error = AuthCodes::send(['id' => $p['id'], 'name' => $p['name'], 'email' => $p['email']], 'login');
+                    flash($error ? 'error' : 'success', $error ? 'We could not send a new code. Please try again.' : 'A new code was sent. Older codes no longer work.');
+                    $_SESSION['pending_2fa']['at'] = time();
+                }
+                redirect('verify-login');
+            }
+
+            $result = AuthCodes::verify((int) $p['id'], 'login', (string) ($_POST['code'] ?? ''));
+            if ($result === 'ok') {
+                $stmt = db()->prepare('SELECT * FROM users WHERE id = :id AND is_active = 1');
+                $stmt->execute(['id' => $p['id']]);
+                $user = $stmt->fetch();
+                if (!$user) {
+                    unset($_SESSION['pending_2fa']);
+                    flash('error', 'This account has been deactivated. Please contact the salon.');
+                    redirect('login');
+                }
+                if (!empty($_POST['remember'])) {
+                    AuthCodes::trustDevice((int) $user['id']);
+                }
+                $this->finishLogin($user, 'Logged in with 2-step verification' . (!empty($_POST['remember']) ? ' (device remembered for 30 days).' : '.'));
+            }
+
+            log_activity('account', '2fa_failed', 'Wrong or expired sign-in code (' . $result . ').', $actor);
+            flash('error', match ($result) {
+                'wrong'    => 'That code is not right. Check the latest email and try again.',
+                'too_many' => 'Too many wrong codes. Click "Send a new code".',
+                default    => 'That code has expired. Click "Send a new code".',
+            });
+            redirect('verify-login');
+        }
+
+        view('public/verify-login', [
+            'title'  => 'Enter your code',
+            'layout' => 'auth',
+            'masked' => AuthCodes::maskEmail((string) $p['email']),
+        ]);
+    }
+
+    /** Forgot password, step 1: ask for a reset code. */
+    public function forgotPassword(): void
+    {
+        if ($user = current_user()) {
+            redirect(home_for_role($user['role']));
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            csrf_check();
+            $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                remember_old(['email' => $email]);
+                flash('error', 'Enter the email address you log in with.');
+                redirect('forgot-password');
+            }
+
+            try {
+                $stmt = db()->prepare('SELECT id, name, email, role, is_active FROM users WHERE email = :email LIMIT 1');
+                $stmt->execute(['email' => $email]);
+                $user = $stmt->fetch();
+                if ($user && (int) $user['is_active']) {
+                    [$count, $ago] = AuthCodes::recent((int) $user['id'], 'reset');
+                    $actor = ['id' => $user['id'], 'name' => $user['name'], 'role' => $user['role']];
+                    if ($count < AuthCodes::MAX_PER_HOUR && $ago >= AuthCodes::RESEND_WAIT) {
+                        $error = AuthCodes::send($user, 'reset');
+                        log_activity('account', 'reset_requested', $error ? 'Asked for a password reset code (email failed).' : 'Asked for a password reset code.', $actor);
+                        if ($error) {
+                            flash('error', 'We could not send the email right now. Please try again in a minute.');
+                            redirect('forgot-password');
+                        }
+                    }
+                } else {
+                    log_activity('account', 'reset_unknown', 'Password reset asked for an email with no active account: ' . $email . '.', ['id' => null, 'name' => 'Unknown', 'role' => 'guest']);
+                }
+            } catch (PDOException $e) {
+                error_log('[AMOURE] Reset setup error: ' . $e->getMessage());
+                flash('error', 'Password reset is not set up yet. Ask the salon admin to import database/auth-codes.sql.');
+                redirect('forgot-password');
+            }
+
+            // Same answer whether or not the email has an account, so nobody can test which emails are registered.
+            $_SESSION['reset_email'] = $email;
+            flash('success', 'If ' . $email . ' has an account, we sent it a 6-digit code. Check your inbox and Spam folder.');
+            redirect('reset-password');
+        }
+
+        view('public/forgot-password', ['title' => 'Forgot password', 'layout' => 'auth']);
+    }
+
+    /** Forgot password, step 2: type the code and a new password. */
+    public function resetPassword(): void
+    {
+        if ($user = current_user()) {
+            redirect(home_for_role($user['role']));
+        }
+        $email = (string) ($_SESSION['reset_email'] ?? '');
+        if ($email === '') {
+            redirect('forgot-password');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            csrf_check();
+            $code     = (string) ($_POST['code'] ?? '');
+            $password = (string) ($_POST['password'] ?? '');
+            $confirm  = (string) ($_POST['password_confirm'] ?? '');
+
+            if (strlen($password) < 8) {
+                flash('error', 'Your new password must be at least 8 characters.');
+                redirect('reset-password');
+            }
+            if ($password !== $confirm) {
+                flash('error', 'The two passwords do not match.');
+                redirect('reset-password');
+            }
+
+            $stmt = db()->prepare('SELECT id, name, role FROM users WHERE email = :email AND is_active = 1 LIMIT 1');
+            $stmt->execute(['email' => $email]);
+            $user = $stmt->fetch();
+            $result = $user ? AuthCodes::verify((int) $user['id'], 'reset', $code) : 'wrong';
+
+            if ($result !== 'ok') {
+                if ($user) {
+                    log_activity('account', 'reset_failed', 'Wrong or expired reset code (' . $result . ').', ['id' => $user['id'], 'name' => $user['name'], 'role' => $user['role']]);
+                }
+                flash('error', $result === 'too_many' || $result === 'expired' || $result === 'none'
+                    ? 'That code no longer works. Ask for a new one below.'
+                    : 'That code is not right. Check the latest email and try again.');
+                redirect('reset-password');
+            }
+
+            db()->prepare('UPDATE users SET password_hash = :hash WHERE id = :id')
+                ->execute(['hash' => password_hash($password, PASSWORD_DEFAULT), 'id' => $user['id']]);
+            AuthCodes::forgetDevices((int) $user['id']); // remembered browsers must sign in again
+            unset($_SESSION['reset_email']);
+            log_activity('account', 'password_reset', 'Password reset with an emailed code.', ['id' => $user['id'], 'name' => $user['name'], 'role' => $user['role']]);
+            remember_old(['email' => $email]);
+            flash('success', 'Your password was changed. You can log in now.');
+            redirect('login');
+        }
+
+        view('public/reset-password', [
+            'title'  => 'Reset password',
+            'layout' => 'auth',
+            'email'  => $email,
+        ]);
     }
 
     private const MAX_FAILED_PER_EMAIL = 5;   // wrong passwords for one account

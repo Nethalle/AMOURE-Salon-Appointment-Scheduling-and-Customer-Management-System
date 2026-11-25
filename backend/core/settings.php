@@ -21,6 +21,8 @@ const SETTING_DEFAULTS = [
     'tiktok_url'              => '',
     // Full web address of the system, used for buttons in emails (learned automatically)
     'site_url'                => '',
+    // Security: '1' = admin and staff must enter an email code when they log in
+    'require_2fa_staff'       => '0',
 ];
 
 function setting(string $key): string

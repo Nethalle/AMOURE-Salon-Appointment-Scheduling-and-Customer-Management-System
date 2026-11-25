@@ -123,7 +123,7 @@ $phone     = setting('salon_phone');
                     <?= icon('chevron', 'icon icon-sm') ?>
                 </summary>
                 <div class="menu menu-right">
-                    <a href="<?= e(url('account/password')) ?>"><?= icon('key') ?> Change password</a>
+                    <a href="<?= e(url('account/password')) ?>"><?= icon('key') ?> My account &amp; security</a>
                     <a href="<?= e(url('home')) ?>"><?= icon('globe') ?> View website</a>
                     <form method="post" action="<?= e(url('logout')) ?>">
                         <?= csrf_field() ?>
@@ -181,7 +181,7 @@ $phone     = setting('salon_phone');
                 <div class="menu menu-right">
                     <a href="<?= e(url('customer/my-appointments')) ?>"><?= icon('calendar') ?> My appointments</a>
                     <a href="<?= e(url('customer/book')) ?>"><?= icon('plus') ?> Book appointment</a>
-                    <a href="<?= e(url('account/password')) ?>"><?= icon('key') ?> Change password</a>
+                    <a href="<?= e(url('account/password')) ?>"><?= icon('key') ?> My account &amp; security</a>
                     <hr>
                     <form method="post" action="<?= e(url('logout')) ?>">
                         <?= csrf_field() ?>
