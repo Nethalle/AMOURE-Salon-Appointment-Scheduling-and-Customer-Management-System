@@ -12,7 +12,7 @@
         <input type="hidden" name="page" value="staff/customers">
         <div class="search-box grow" style="max-width:420px">
             <?= icon('search') ?>
-            <input type="search" name="q" value="<?= e($q) ?>" placeholder="Search customers…" aria-label="Search customers">
+            <input type="search" name="q" value="<?= e($q) ?>" placeholder="Search name, phone, email or CUS-…" aria-label="Search customers">
         </div>
         <button type="submit" class="btn btn-ghost">Search</button>
         <?php if ($q !== ''): ?><a href="<?= e(url('staff/customers')) ?>" class="btn btn-ghost">Clear</a><?php endif; ?>
@@ -40,7 +40,7 @@
                                 <span class="avatar-i"><?= e(initials($c['full_name'])) ?></span>
                                 <span>
                                     <strong><?= e($c['full_name']) ?></strong>
-                                    <small><?= $c['user_id'] ? 'Online account' : 'Walk-in / phone' ?></small>
+                                    <small><span class="ref"><?= e(cust_ref($c['id'])) ?></span> · <?= $c['user_id'] ? 'Online account' : 'Walk-in / phone' ?></small>
                                 </span>
                             </div>
                         </td>

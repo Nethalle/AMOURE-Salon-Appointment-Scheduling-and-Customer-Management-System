@@ -1,6 +1,7 @@
 <?php /** @var array $a  @var string $when */ ?>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-top:1px solid #EADAD5;">
     <?php foreach ([
+        'Booking #' => appt_ref($a['id']),
         'Service' => $a['service'],
         'Stylist' => $a['stylist'],
         'When'    => $when . ' – ' . fmt_time($a['end_time']),

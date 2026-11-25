@@ -3,7 +3,7 @@ $ready = $pick['service'] && $pick['stylist'] && !$pick['problem'] && !$pick['fu
 ?>
 <div class="page-head">
     <p><a href="<?= e(url('staff/appointments')) ?>">← Back to appointments</a></p>
-    <h1 class="card-title">Reschedule appointment</h1>
+    <h1 class="card-title">Reschedule appointment <span class="ref ref-lg"><?= e(appt_ref($appt['id'])) ?></span></h1>
     <p class="muted">
         <?= e($appt['customer']) ?> · <?= e($appt['service']) ?> with <?= e($appt['stylist']) ?> ·
         currently <?= e(fmt_date($appt['appt_date'])) ?> at <?= e(fmt_time($appt['start_time'])) ?>

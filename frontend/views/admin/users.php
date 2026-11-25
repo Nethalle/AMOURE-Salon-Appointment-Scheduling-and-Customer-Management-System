@@ -39,7 +39,10 @@ $tabs = ['' => ['All', array_sum($roleCounts)], 'admin' => ['Admins', $roleCount
                         <td>
                             <div class="cell-person">
                                 <span class="avatar-i"><?= e(initials($u['name'])) ?></span>
-                                <strong><?= e($u['name']) ?><?= $isMe ? ' <span class="muted" style="font-weight:400">(you)</span>' : '' ?></strong>
+                                <span>
+                                    <strong><?= e($u['name']) ?><?= $isMe ? ' <span class="muted" style="font-weight:400">(you)</span>' : '' ?></strong>
+                                    <small><span class="ref"><?= e(user_ref($u['id'])) ?></span></small>
+                                </span>
                             </div>
                         </td>
                         <td><span class="badge <?= e($roleBadge[$u['role']]) ?>"><?= e($roleLabels[$u['role']]) ?></span></td>

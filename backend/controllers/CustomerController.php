@@ -40,9 +40,9 @@ class CustomerController
         // Only real customers: walk-ins (no login) and customer accounts. Admin/staff logins are hidden.
         $where  = "WHERE (c.user_id IS NULL OR u.role = 'customer')";
         if ($q !== '') {
-            $where .= ' AND (c.full_name LIKE :q1 OR c.phone LIKE :q2 OR c.email LIKE :q3)';
+            $where .= ' AND (c.full_name LIKE :q1 OR c.phone LIKE :q2 OR c.email LIKE :q3 OR c.id = :qid)';
             $like  = '%' . $q . '%';
-            $params = ['q1' => $like, 'q2' => $like, 'q3' => $like];
+            $params = ['q1' => $like, 'q2' => $like, 'q3' => $like, 'qid' => ref_to_id($q, 'CUS') ?: -1];
         }
 
         $stmt = db()->prepare("SELECT COUNT(*) FROM customers c LEFT JOIN users u ON u.id = c.user_id $where");

@@ -36,7 +36,7 @@ class DashboardController
 
         // Today's schedule (not cancelled).
         $stmt = db()->prepare(
-            "SELECT a.start_time, a.end_time, a.status, c.full_name AS customer, s.name AS service, st.full_name AS stylist
+            "SELECT a.id, a.start_time, a.end_time, a.status, c.full_name AS customer, s.name AS service, st.full_name AS stylist
                FROM appointments a
                JOIN customers c  ON c.id  = a.customer_id
                JOIN services  s  ON s.id  = a.service_id

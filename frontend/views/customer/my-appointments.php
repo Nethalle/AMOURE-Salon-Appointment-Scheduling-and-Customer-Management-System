@@ -17,6 +17,7 @@
                 <table class="table">
                     <thead>
                         <tr>
+                            <th scope="col">Booking #</th>
                             <th scope="col">Date</th>
                             <th scope="col">Time</th>
                             <th scope="col">Service</th>
@@ -28,6 +29,7 @@
                     <tbody>
                     <?php foreach ($upcoming as $a): ?>
                         <tr>
+                            <td><span class="ref"><?= e(appt_ref($a['id'])) ?></span></td>
                             <td><?= e(fmt_date($a['appt_date'])) ?></td>
                             <td><?= e(fmt_time($a['start_time'])) ?> – <?= e(fmt_time($a['end_time'])) ?></td>
                             <td><?= e($a['service']) ?></td>
@@ -60,6 +62,7 @@
                 <table class="table">
                     <thead>
                         <tr>
+                            <th scope="col">Booking #</th>
                             <th scope="col">Date</th>
                             <th scope="col">Time</th>
                             <th scope="col">Service</th>
@@ -71,6 +74,7 @@
                     <tbody>
                     <?php foreach ($past as $a): ?>
                         <tr>
+                            <td><span class="ref"><?= e(appt_ref($a['id'])) ?></span></td>
                             <td><?= e(fmt_date($a['appt_date'])) ?></td>
                             <td><?= e(fmt_time($a['start_time'])) ?></td>
                             <td><?= e($a['service']) ?></td>
