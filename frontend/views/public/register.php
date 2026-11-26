@@ -18,12 +18,12 @@
             <?= csrf_field() ?>
 
             <label for="name">Full name</label>
-            <input type="text" id="name" name="name" value="<?= old('name') ?>" placeholder="Enter your full name" required maxlength="100" autocomplete="name" autofocus>
+            <input type="text" id="name" name="name" value="<?= old_or('name', mb_substr((string) ($_GET['name'] ?? ''), 0, 100)) ?>" placeholder="Enter your full name" required maxlength="100" autocomplete="name" autofocus>
 
             <div class="form-two">
                 <div class="field">
                     <label for="email">Email address</label>
-                    <input type="email" id="email" name="email" value="<?= old('email') ?>" placeholder="you@example.com" required maxlength="150" autocomplete="email">
+                    <input type="email" id="email" name="email" value="<?= old_or('email', mb_substr((string) ($_GET['email'] ?? ''), 0, 150)) ?>" placeholder="you@example.com" required maxlength="150" autocomplete="email">
                 </div>
                 <div class="field">
                     <label for="phone">Phone (optional)</label>
