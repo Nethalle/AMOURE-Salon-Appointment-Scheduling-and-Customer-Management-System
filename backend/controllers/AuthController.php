@@ -188,6 +188,10 @@ class AuthController
                             redirect('forgot-password');
                         }
                     }
+                } elseif (!$user && ($walkIn = $this->walkInProfile($email))) {
+                    // Added by staff as a walk-in, so there is no password to reset yet.
+                    // Email them a link to create their account (it joins their walk-in record on sign-up).
+                    $this->sendCreateAccountEmail($walkIn);
                 } else {
                     log_activity('account', 'reset_unknown', 'Password reset asked for an email with no active account: ' . $email . '.', ['id' => null, 'name' => 'Unknown', 'role' => 'guest']);
                 }
@@ -199,11 +203,41 @@ class AuthController
 
             // Same answer whether or not the email has an account, so nobody can test which emails are registered.
             $_SESSION['reset_email'] = $email;
-            flash('success', 'If ' . $email . ' has an account, we sent it a 6-digit code. Check your inbox and Spam folder.');
+            flash('success', 'If ' . $email . ' is in our system, we sent it an email: a 6-digit code, or a link to create your account if you were added as a walk-in. Check your inbox and Spam folder.');
             redirect('reset-password');
         }
 
         view('public/forgot-password', ['title' => 'Forgot password', 'layout' => 'auth']);
+    }
+
+    /** A walk-in customer record with this email and no login account yet. */
+    private function walkInProfile(string $email): ?array
+    {
+        $stmt = db()->prepare('SELECT id, full_name, email FROM customers WHERE LOWER(email) = :email AND user_id IS NULL LIMIT 1');
+        $stmt->execute(['email' => $email]);
+        return $stmt->fetch() ?: null;
+    }
+
+    /** Email a walk-in a "create your account" link. Max 3 per hour per email. */
+    private function sendCreateAccountEmail(array $c): void
+    {
+        $actor = ['id' => null, 'name' => $c['full_name'], 'role' => 'guest'];
+        $since = date('Y-m-d H:i:s', time() - 3600);
+        $stmt  = db()->prepare("SELECT COUNT(*) FROM activity_logs WHERE action = 'invite_sent' AND details LIKE :d AND created_at >= :since");
+        $stmt->execute(['d' => '%' . $c['email'] . '%', 'since' => $since]);
+        if ((int) $stmt->fetchColumn() >= 3) {
+            return;
+        }
+
+        $link = abs_url('register', ['email' => $c['email'], 'name' => $c['full_name']]);
+        $html = render_email('create-account', ['name' => $c['full_name'], 'btnUrl' => $link, 'btnLabel' => 'Create my account']);
+        $text = "Hi {$c['full_name']},\n\nYou asked to reset your AMOURÉ SALON password, but you don't have an online account yet. "
+              . "The salon saved you as a walk-in customer.\n\nCreate your account with this same email and your past bookings will show up:\n"
+              . ($link !== '' ? $link : 'Open our website and click "Create an account".')
+              . "\n\nDidn't ask for this? You can ignore this email.\n\nAMOURÉ SALON";
+        $error = Mailer::send($c['email'], $c['full_name'], "AMOURÉ SALON · Create your account", $html, $text);
+        log_activity('account', $error ? 'invite_failed' : 'invite_sent',
+            ($error ? 'Could not email' : 'Emailed') . ' a create-account link to walk-in ' . cust_ref((int) $c['id']) . ' (' . $c['email'] . ').', $actor);
     }
 
     /** Forgot password, step 2: type the code and a new password. */
