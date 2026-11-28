@@ -1,4 +1,15 @@
-<?php /** @var array $stylists  @var array $services  @var int[] $checked */ ?>
+<?php /** @var array $stylists  @var array $services  @var int[] $checked */
+// Filters: ?q=bea  ?status=active|inactive
+$q      = trim((string) ($_GET['q'] ?? ''));
+$status = in_array($_GET['status'] ?? '', ['active', 'inactive'], true) ? $_GET['status'] : '';
+$total  = count($stylists);
+$list   = array_filter($stylists, static function ($st) use ($q, $status) {
+    if ($status !== '' && ($status === 'active') !== (bool) (int) $st['is_active']) { return false; }
+    if ($q === '') { return true; }
+    $hay = mb_strtolower($st['full_name'] . ' ' . $st['specialty'] . ' ' . implode(' ', $st['services']));
+    return str_contains($hay, mb_strtolower($q));
+});
+?>
 <div class="ph">
     <div>
         <h1>Stylists</h1>
@@ -11,11 +22,29 @@
     <?php endif; ?>
 </div>
 
+<form method="get" action="index.php" class="svc-toolbar" role="search" data-autosubmit>
+    <input type="hidden" name="page" value="admin/stylists">
+    <div class="search-box grow">
+        <?= icon('search') ?>
+        <input type="search" name="q" value="<?= e($q) ?>" placeholder="Search stylists by name, specialty or service…" aria-label="Search stylists">
+    </div>
+    <label class="sel-pill"><span class="sr-only">Status</span>
+        <select name="status" aria-label="Filter by status">
+            <option value="">All Status</option>
+            <option value="active" <?= $status === 'active' ? 'selected' : '' ?>>Active</option>
+            <option value="inactive" <?= $status === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+        </select>
+    </label>
+    <?php if ($q !== '' || $status !== ''): ?><a href="<?= e(url('admin/stylists')) ?>" class="btn btn-ghost btn-small">Clear</a><?php endif; ?>
+</form>
+
 <?php if (!$stylists): ?>
     <section class="panel"><p class="empty">No stylists yet. Add the first one.</p></section>
+<?php elseif (!$list): ?>
+    <section class="panel"><p class="empty">No stylist matches your search.</p></section>
 <?php else: ?>
     <div class="sty-grid">
-        <?php foreach ($stylists as $st): $on = (int) $st['is_active']; ?>
+        <?php foreach ($list as $st): $on = (int) $st['is_active']; ?>
             <article class="sty-card <?= $on ? '' : 'is-off' ?>">
                 <div class="sty-photo">
                     <?php if ($file = stylist_photo_file($st)): ?>

@@ -96,6 +96,7 @@ class AppointmentController
                 'step'     => 2,
                 'service'  => $service,
                 'stylists' => BookingRules::stylistsForService($serviceId),
+                'ratings'  => $this->stylistRatings(),
             ]);
             return;
         }
@@ -134,6 +135,22 @@ class AppointmentController
             'time'    => $time,
             'endTime' => BookingRules::endTime($time, (int) $service['duration_minutes']),
         ]);
+    }
+
+    /** Average approved review rating per stylist: [stylist_id => ['avg' => 4.8, 'count' => 12]]. */
+    private function stylistRatings(): array
+    {
+        $rows = db()->query(
+            "SELECT a.stylist_id, AVG(r.rating) AS avg_rating, COUNT(*) AS n
+               FROM reviews r JOIN appointments a ON a.id = r.appointment_id
+              WHERE r.status = 'approved'
+              GROUP BY a.stylist_id"
+        )->fetchAll();
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int) $r['stylist_id']] = ['avg' => (float) $r['avg_rating'], 'count' => (int) $r['n']];
+        }
+        return $out;
     }
 
     /** Customer: cancel one of their own upcoming appointments. */

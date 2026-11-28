@@ -14,13 +14,17 @@ $isCustPage  = false;
 // route => [label, icon]
 $sidebar = [];
 if ($user && $user['role'] === 'admin') {
+    // Keys starting with '#' are small group titles in the sidebar.
     $sidebar = [
         'admin/dashboard'    => ['Dashboard', 'home'],
+        '#bookings'          => 'Bookings',
         'staff/appointments' => ['Appointments', 'calendar'],
         'staff/customers'    => ['Customers', 'users'],
+        '#salon'             => 'Salon',
         'admin/services'     => ['Services', 'scissors'],
         'admin/stylists'     => ['Stylists', 'user'],
         'admin/reviews'      => ['Reviews', 'star'],
+        '#manage'            => 'Manage',
         'admin/reports'      => ['Reports', 'bar'],
         'admin/users'        => ['User Accounts', 'shield'],
         'admin/activity'     => ['Activity Log', 'clock'],
@@ -28,6 +32,7 @@ if ($user && $user['role'] === 'admin') {
 } elseif ($user && $user['role'] === 'staff') {
     $sidebar = [
         'staff/dashboard'    => ['Dashboard', 'home'],
+        '#bookings'          => 'Bookings',
         'staff/appointments' => ['Appointments', 'calendar'],
         'staff/customers'    => ['Customers', 'users'],
     ];
@@ -35,6 +40,7 @@ if ($user && $user['role'] === 'admin') {
     $sidebar = [
         'customer/my-appointments' => ['My Appointments', 'calendar'],
         'customer/book'            => ['Book Appointment', 'plus'],
+        '#account'                 => 'Account',
         'account/password'         => ['My Account', 'user'],
     ];
 }
@@ -72,7 +78,7 @@ $phone     = setting('salon_phone');
     <link rel="stylesheet" href="frontend/assets/css/style.css?v=<?= @filemtime($css . 'style.css') ?>">
     <link rel="stylesheet" href="frontend/assets/css/home.css?v=<?= @filemtime($css . 'home.css') ?>">
     <?php if ($isApp || $isCust): ?>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Poppins:wght@600;700&family=Playfair+Display:wght@600;700&display=swap">
     <link rel="stylesheet" href="frontend/assets/css/app.css?v=<?= @filemtime($css . 'app.css') ?>">
     <?php endif; ?>
 </head>
@@ -91,7 +97,11 @@ $phone     = setting('salon_phone');
         </a>
 
         <nav class="app-nav" aria-label="Main">
-            <?php foreach ($sidebar as $route => [$label, $ic]): ?>
+            <?php foreach ($sidebar as $route => $item): ?>
+                <?php if (is_string($item)): ?>
+                    <span class="app-nav-group"><?= e($item) ?></span>
+                    <?php continue; ?>
+                <?php endif; [$label, $ic] = $item; ?>
                 <a href="<?= e(url($route)) ?>" <?= $isActive($route) ? 'aria-current="page"' : '' ?>><?= icon($ic) ?><span><?= e($label) ?></span></a>
             <?php endforeach; ?>
         </nav>
@@ -112,6 +122,15 @@ $phone     = setting('salon_phone');
     <div class="app-main">
         <header class="app-top">
             <button type="button" class="app-menu-btn" data-toggle-side aria-label="Open menu"><span></span><span></span><span></span></button>
+            <p class="app-today"><?= e(date('l, F j')) ?></p>
+            <?php if (in_array($user['role'], ['admin', 'staff'], true)): ?>
+                <form class="top-search" method="get" action="index.php" role="search">
+                    <input type="hidden" name="page" value="staff/appointments">
+                    <input type="hidden" name="tab" value="all">
+                    <?= icon('search') ?>
+                    <input type="search" name="q" placeholder="Search appointments…" aria-label="Search appointments">
+                </form>
+            <?php endif; ?>
             <button type="button" class="theme-btn" data-theme-toggle aria-label="Switch light / dark mode" title="Light / dark mode">
                 <?= icon('moon', 'icon moon') ?><?= icon('sun', 'icon sun') ?>
             </button>
