@@ -83,7 +83,25 @@ class DashboardController
             $chart[$d] = $perDay[$d] ?? 0;
         }
 
+        // Quick overview: this month so far vs the same days last month.
+        $monthStart = date('Y-m-01');
+        $lastStart  = date('Y-m-01', strtotime('first day of last month'));
+        $lastEnd    = date('Y-m-d', min(strtotime(date('Y-m-t', strtotime($lastStart))), strtotime('-1 month')));
+        $overview   = [
+            'appointments' => $this->countAppointments($monthStart, $today),
+            'appointmentsBefore' => $this->countAppointments($lastStart, $lastEnd),
+            'customers'    => $this->countNewCustomers($monthStart, $today),
+            'customersBefore' => $this->countNewCustomers($lastStart, $lastEnd),
+            'revenue'      => $this->sumRevenue($monthStart, $today),
+            'revenueBefore' => $this->sumRevenue($lastStart, $lastEnd),
+        ];
+        $stmt = db()->query("SELECT COUNT(*) AS n, AVG(rating) AS avg FROM reviews WHERE status = 'approved'");
+        $rating = $stmt->fetch() ?: ['n' => 0, 'avg' => null];
+        $overview['ratingCount'] = (int) $rating['n'];
+        $overview['rating']      = $rating['avg'] !== null ? (float) $rating['avg'] : null;
+
         view('staff/dashboard', [
+            'overview'        => $overview,
             'title'           => $title,
             'user'            => $user,
             'counts'          => $counts,
@@ -95,5 +113,31 @@ class DashboardController
             'revExpected'     => $revExpected,
             'chart'           => $chart,
         ]);
+    }
+
+    /** Bookings in a date range (cancelled ones not counted). */
+    private function countAppointments(string $from, string $to): int
+    {
+        $stmt = db()->prepare("SELECT COUNT(*) FROM appointments WHERE appt_date BETWEEN :a AND :b AND status <> 'cancelled'");
+        $stmt->execute(['a' => $from, 'b' => $to]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    /** New customer profiles (not admin/staff accounts) created in a date range. */
+    private function countNewCustomers(string $from, string $to): int
+    {
+        $stmt = db()->prepare("SELECT COUNT(*) FROM customers c LEFT JOIN users u ON u.id = c.user_id
+              WHERE (c.user_id IS NULL OR u.role = 'customer') AND c.created_at BETWEEN :a AND :b");
+        $stmt->execute(['a' => $from . ' 00:00:00', 'b' => $to . ' 23:59:59']);
+        return (int) $stmt->fetchColumn();
+    }
+
+    /** Revenue from completed appointments in a date range. */
+    private function sumRevenue(string $from, string $to): float
+    {
+        $stmt = db()->prepare("SELECT COALESCE(SUM(s.price), 0) FROM appointments a JOIN services s ON s.id = a.service_id
+              WHERE a.appt_date BETWEEN :a AND :b AND a.status = 'completed'");
+        $stmt->execute(['a' => $from, 'b' => $to]);
+        return (float) $stmt->fetchColumn();
     }
 }

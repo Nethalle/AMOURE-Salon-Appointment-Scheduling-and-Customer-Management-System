@@ -181,6 +181,20 @@ document.addEventListener('click', function (event) {
     var chips = document.querySelectorAll('.cat-chips a');
     var none = document.querySelector('.svc-none');
 
+    var onlyCat = '';   // '' = all categories, otherwise a section id like "cat-haircut"
+
+    // Category chips filter the list ("All Services" shows everything).
+    chips.forEach(function (chip) {
+        chip.addEventListener('click', function (e) {
+            e.preventDefault();
+            var id = chip.getAttribute('href').slice(1);
+            onlyCat = id === 'all' ? '' : id;
+            chips.forEach(function (c) { c.removeAttribute('aria-current'); });
+            chip.setAttribute('aria-current', 'true');
+            input.dispatchEvent(new Event('input'));
+        });
+    });
+
     input.addEventListener('input', function () {
         var words = input.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
         var shown = 0;
@@ -192,7 +206,7 @@ document.addEventListener('click', function (event) {
         });
         sections.forEach(function (sec) {
             var visible = sec.querySelectorAll('.choice-row:not([hidden])').length;
-            sec.hidden = visible === 0;
+            sec.hidden = visible === 0 || (onlyCat !== '' && sec.id !== onlyCat);
             var chip = document.querySelector('.cat-chips a[href="#' + sec.id + '"]');
             if (chip) {
                 chip.hidden = visible === 0;
@@ -202,7 +216,8 @@ document.addEventListener('click', function (event) {
                 }
             }
         });
-        none.hidden = shown > 0;
+        var anyShown = document.querySelectorAll('.cat-section:not([hidden])').length > 0;
+        none.hidden = anyShown || words.length === 0;
         none.querySelector('span').textContent = input.value.trim();
     });
     // Esc clears the search.
@@ -237,4 +252,37 @@ document.querySelectorAll('[data-photo-input]').forEach(function (input) {
         box.innerHTML = '';
         box.appendChild(img);
     });
+});
+
+// Status dropdown that filters table rows by their data-status (customer history).
+document.querySelectorAll('select[data-status-filter]').forEach(function (sel) {
+    var table = document.querySelector(sel.getAttribute('data-status-filter'));
+    if (!table) {
+        return;
+    }
+    sel.addEventListener('change', function () {
+        var shown = 0;
+        table.querySelectorAll('tbody tr[data-status]').forEach(function (tr) {
+            tr.hidden = sel.value !== '' && tr.getAttribute('data-status') !== sel.value;
+            shown += tr.hidden ? 0 : 1;
+        });
+        var none = table.querySelector('.filter-none');
+        if (none) {
+            none.hidden = shown > 0;
+        }
+    });
+});
+
+// Booking date strip: arrow buttons scroll the days; the chosen day is scrolled into view.
+document.querySelectorAll('[data-day-strip]').forEach(function (strip) {
+    var box = strip.closest('.day-scroller');
+    box.querySelectorAll('[data-scroll-days]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            strip.scrollBy({ left: parseInt(btn.getAttribute('data-scroll-days'), 10) * strip.clientWidth * 0.8, behavior: 'smooth' });
+        });
+    });
+    var sel = strip.querySelector('.day-selected');
+    if (sel) {
+        strip.scrollLeft = sel.offsetLeft - strip.offsetLeft - 40;
+    }
 });
