@@ -157,20 +157,29 @@ $gallery = [
     <?php if (!$reviews): ?>
         <p class="muted">Reviews from our clients will appear here.</p>
     <?php else: ?>
-        <div class="vouch-grid">
-            <?php foreach ($reviews as $r): ?>
-                <figure class="vouch">
-                    <div class="vouch-head">
-                        <span class="avatar avatar-sm" aria-hidden="true"><?= e(mb_strtoupper(mb_substr($r['name'], 0, 1))) ?></span>
-                        <div>
-                            <strong><?= e($r['name']) ?></strong>
-                            <span class="stars" aria-label="<?= e($r['rating']) ?> out of 5 stars"><?= e(stars((int) $r['rating'])) ?></span>
-                        </div>
+        <div class="vouch-wall">
+            <?php foreach ($reviews as $i => $r): ?>
+                <figure class="vouch2 <?= $r['comment'] === null ? 'is-short' : '' ?> <?= $i === 0 && $r['comment'] !== null ? 'is-featured' : '' ?>">
+                    <div class="vouch2-top">
+                        <span class="vouch2-stars" aria-label="<?= e($r['rating']) ?> out of 5 stars"><?= e(stars((int) $r['rating'])) ?></span>
+                        <?php if ($r['visits'] >= 2): ?>
+                            <span class="vouch2-badge" title="Completed visits at the salon">Returning client · <?= $r['visits'] ?> visits</span>
+                        <?php else: ?>
+                            <span class="vouch2-badge is-verified">Verified client</span>
+                        <?php endif; ?>
                     </div>
                     <?php if ($r['comment'] !== null): ?>
-                        <blockquote>“<?= e($r['comment']) ?>”</blockquote>
+                        <blockquote><?= e($r['comment']) ?></blockquote>
+                    <?php else: ?>
+                        <p class="vouch2-short">Rated <?= (int) $r['rating'] ?> out of 5 for <?= e($r['service']) ?>.</p>
                     <?php endif; ?>
-                    <figcaption class="muted">Verified client · <?= e($r['service']) ?></figcaption>
+                    <figcaption>
+                        <span class="vouch2-avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr($r['name'], 0, 1))) ?></span>
+                        <span class="vouch2-who">
+                            <strong><?= e($r['name']) ?></strong>
+                            <span><?= e($r['service']) ?> with <?= e($r['stylist']) ?><?= !empty($r['created_at']) ? ' · ' . e(date('M Y', strtotime($r['created_at']))) : '' ?></span>
+                        </span>
+                    </figcaption>
                 </figure>
             <?php endforeach; ?>
         </div>

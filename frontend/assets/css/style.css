@@ -1320,3 +1320,71 @@ a.nav-user { text-decoration: none; }
 .check-row input { width: 16px; height: 16px; accent-color: #A85C5E; }
 .resend-form { margin-top: 16px; font-size: 13.5px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
 .link-button { border: 0; background: none; padding: 0; color: #A85C5E; font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+/* =============================================================
+   Homepage reviews: one card per client, masonry wall (no empty gaps)
+   ============================================================= */
+.vouch-wall { columns: 3 320px; column-gap: 20px; }
+.vouch2 {
+    break-inside: avoid; margin: 0 0 20px; padding: 24px 24px 20px;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(152, 87, 81, .06);
+}
+.vouch2-stars { color: var(--gold-text); font-size: 17px; letter-spacing: 2px; }
+.vouch2 blockquote { position: relative; margin: 12px 0 18px; font-family: var(--serif); font-size: 21px; font-style: italic; line-height: 1.45; color: var(--ink); }
+.vouch2 blockquote::before { content: '\201C'; position: absolute; left: -6px; top: -26px; font-size: 64px; line-height: 1; color: var(--blush-deep); font-style: normal; }
+.vouch2.is-featured { background: linear-gradient(160deg, #FFFFFF 40%, #FBEDEA); border-color: var(--blush-deep); }
+.vouch2.is-featured blockquote { font-size: 24px; }
+.vouch2-short { margin: 8px 0 16px; color: var(--muted); font-size: 15px; }
+.vouch2 figcaption { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; padding-top: 14px; border-top: 1px solid var(--line); }
+.vouch2-avatar { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--blush); color: var(--rose-text); font-family: var(--serif); font-size: 19px; border: 1px solid var(--rose); }
+.vouch2-who { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.vouch2-who strong { font-size: 15px; color: var(--ink); }
+.vouch2-who span { font-size: 13px; color: var(--muted); }
+.vouch2-badge { padding: 4px 10px; border-radius: 999px; background: #F6E3DF; color: var(--rose-text); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.vouch2-badge.is-verified { background: var(--success-bg); color: var(--success-ink); }
+@media (max-width: 700px) { .vouch-wall { columns: 1; } .vouch2 blockquote { font-size: 19px; } }
+.vouch2-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.vouch2 figcaption { flex-wrap: nowrap; }
+/* reviews in dark mode */
+html[data-theme="dark"] .vouch2 { background: #211A1C; border-color: #3A2C2F; box-shadow: none; }
+html[data-theme="dark"] .vouch2.is-featured { background: linear-gradient(160deg, #2A1F22 40%, #3A2428); border-color: #5A3A40; }
+html[data-theme="dark"] .vouch2 blockquote { color: #F4E9E7; }
+html[data-theme="dark"] .vouch2 blockquote::before { color: #6B4A4F; }
+html[data-theme="dark"] .vouch2-stars { color: #E2BF7E; }
+html[data-theme="dark"] .vouch2 figcaption { border-top-color: #3A2C2F; }
+html[data-theme="dark"] .vouch2-avatar { background: #3A2428; color: #F1C3BC; border-color: #6B4A4F; }
+html[data-theme="dark"] .vouch2-who strong { color: #F4E9E7; }
+html[data-theme="dark"] .vouch2-who span, html[data-theme="dark"] .vouch2-short { color: #BFAAA6; }
+html[data-theme="dark"] .vouch2-badge { background: #4A2A30; color: #F7C9C2; }
+html[data-theme="dark"] .vouch2-badge.is-verified { background: #1E3326; color: #9ED7AE; }
+
+/* =============================================================
+   Website (homepage, services, reviews...) follows the dark mode
+   chosen inside the system: same "amoure-theme" saved in the browser.
+   ============================================================= */
+html[data-theme="dark"] { color-scheme: dark; }
+html[data-theme="dark"] .layout-site {
+    --bg: #161113;
+    --paper: #211A1C;
+    --blush: #2C2124;
+    --blush-deep: #3A2629;
+    --rose: #B9787A;
+    --rose-btn: #B4686B;
+    --rose-btn-hover: #C77F80;
+    --rose-text: #E6A3A3;
+    --gold: #D9B977;
+    --gold-hover: #E6C98D;
+    --gold-text: #D9B977;
+    --ink: #F4E9E7;
+    --muted: #B5A19E;
+    --line: #382C2F;
+    --success-bg: #1E3326; --success-ink: #9ED7AE;
+    --error-bg: #3B1F1F;   --error-ink: #F2A9A3;
+    background: var(--bg);
+    color: var(--ink);
+}
+html[data-theme="dark"] .layout-site .promo-bar,
+html[data-theme="dark"] .layout-site .site-footer { background: #0E0A0B; color: #E8DCDA; border-top: 1px solid #2A2023; }
+html[data-theme="dark"] .layout-site .site-footer :is(a, p, li, span, h2, h3, h4, small) { color: #D6C6C3; }
+html[data-theme="dark"] .layout-site .site-footer a:hover { color: #F1C3BC; }
